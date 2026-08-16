@@ -477,9 +477,10 @@ const cfg = {
   .abertura-dias .tag {
     background: rgba(233, 198, 75, 0.18);
     color: var(--dourado-claro);
+    /* `flex-basis: 100%` só serve para jogar a etiqueta para a linha de baixo;
+       o `max-width` a impede de esticar de ponta a ponta junto. */
     flex-basis: 100%;
-    align-self: flex-start;
-    width: fit-content;
+    max-width: fit-content;
   }
 
   .abertura-nota {
