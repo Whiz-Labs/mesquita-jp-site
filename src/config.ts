@@ -154,15 +154,27 @@ export const openingHours = {
    * janela de abertura — nunca um horário de khutbah supostamente exato.
    */
   khutbahTime: null as string | null,
+  /**
+   * Não escreva aqui um "fechada fora desses horários" seco: no Ramadan e nos
+   * dois Eid a mesquita abre em outros horários, e a frase ficaria falsa.
+   */
   closedNote:
-    'Fora desses horários a mesquita permanece fechada. Para visitar em outro dia, combine antes pelo formulário.',
+    'Nos outros dias a mesquita abre apenas em datas especiais — Ramadan e as festas de Eid —, anunciadas antes no Instagram. Para visitar fora do horário, combine pelo formulário.',
 } as const;
 
 /**
- * Só o que está confirmado. Não acrescente atividade aqui (aulas, iftar,
- * casamento, apoio a revertidos) antes de a administração confirmar que ela
- * existe de verdade — a versão anterior deste arquivo listava aulas que o
- * centro não oferece.
+ * O que a comunidade faz junto na mesquita — e só isso.
+ *
+ * Não é a lista de serviços: envio de livros e agendamento de visita têm a
+ * própria seção (`#pedidos`) e não entram aqui.
+ *
+ * Só o que está confirmado. Não acrescente atividade (aulas, casamento, apoio
+ * a revertidos) antes de a administração confirmar que ela existe de verdade —
+ * uma versão anterior deste arquivo listava aulas que o centro não oferece.
+ *
+ * Iftar, Eid e as leituras do Alcorão acontecem fora da janela de sexta e
+ * sábado: por isso nenhuma delas anuncia horário aqui. As datas saem no
+ * Instagram a cada ano.
  */
 export const activities = [
   {
@@ -178,16 +190,22 @@ export const activities = [
     icon: 'mosque',
   },
   {
-    title: 'Envio de livros islâmicos',
+    title: 'Leituras do Alcorão',
     description:
-      'Enviamos livros sobre o Islam, sem custo, para quem mora no Nordeste. É só pedir pelo formulário.',
+      'A comunidade se reúne para ler e escutar o Alcorão. Quem ainda não lê em árabe também é bem-vindo.',
     icon: 'book',
   },
   {
-    title: 'Visitas à mesquita',
+    title: 'Iftar no Ramadan',
     description:
-      'Pessoas, escolas e grupos que queiram conhecer a mesquita podem agendar uma visita pelo formulário.',
-    icon: 'users',
+      'No mês de Ramadan a comunidade quebra o jejum junto na mesquita. Os dias são combinados e avisados no Instagram.',
+    icon: 'moon',
+  },
+  {
+    title: 'Eid al-Fitr e Eid al-Adha',
+    description:
+      'As duas festas do ano são celebradas com a comunidade. O horário da oração de Eid muda a cada ano e é anunciado antes.',
+    icon: 'star',
   },
 ] as const;
 

@@ -96,6 +96,13 @@ There are **no classes** at the moment. An earlier version of this repo listed A
 Qur'an lessons with invented times — they were removed. Do not reintroduce any activity,
 class or service into `activities` until the administration confirms it exists.
 
+`activities` is what the community *does together* — jumu'ah, Saturday, Qur'an readings,
+iftar, the two Eids. It is not a service catalogue: sending books and booking a visit are
+services, they have their own section (`#pedidos`), and they were deliberately taken out of
+that list. Iftar and Eid fall outside the Friday/Saturday window, which is why
+`openingHours.closedNote` says the mosque opens on special dates rather than a flat "closed
+otherwise" — keep those two facts in agreement whenever either changes.
+
 **The request form** (`Formulario.astro`, section `#pedidos`) is one form serving three
 subjects — books, visit, other — and its fields swap with **CSS only**: three radios sit as
 direct children of `<form>`, and each conditional block is matched by
