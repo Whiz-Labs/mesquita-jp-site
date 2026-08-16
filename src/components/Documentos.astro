@@ -1,0 +1,201 @@
+---
+import Icon from './Icon.astro';
+import { documents, canalPrincipal } from '../config';
+
+// Os arquivos ficam em `public/docs/`. Enquanto `file` for null o item aparece
+// como "em breve" em vez de virar um link quebrado.
+const disponiveis = documents.filter((d) => d.file);
+---
+
+<section id="documentos" class="section documentos">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Documentos</span>
+      <h2>Modelos e guias da comunidade</h2>
+      <p>
+        Formulários, declarações e guias que a comunidade costuma pedir. Baixe, imprima
+        e traga preenchido — ou peça ajuda no balcão da mesquita.
+      </p>
+    </div>
+
+    <ul class="doc-list">
+      {
+        documents.map((doc) => {
+          const Tag = doc.file ? 'a' : 'div';
+          return (
+            <li>
+              <Tag
+                class:list={['doc', !doc.file && 'doc--soon']}
+                href={doc.file ?? undefined}
+                download={doc.file ? '' : undefined}
+              >
+                <span class="doc-icon">
+                  <Icon name="file" size={22} />
+                </span>
+
+                <span class="doc-text">
+                  <strong>{doc.title}</strong>
+                  <span class="doc-desc">{doc.description}</span>
+                  <span class="doc-meta">
+                    {doc.format && <span class="tag">{doc.format}</span>}
+                    {doc.size && <span class="doc-size">{doc.size}</span>}
+                    {!doc.file && <span class="doc-soon">Em breve</span>}
+                  </span>
+                </span>
+
+                {doc.file && (
+                  <span class="doc-action" aria-hidden="true">
+                    <Icon name="download" size={20} />
+                  </span>
+                )}
+              </Tag>
+            </li>
+          );
+        })
+      }
+    </ul>
+
+    {
+      disponiveis.length === 0 && (
+        <p class="empty-note doc-empty">
+          <Icon name="info" size={18} />
+          Os arquivos estão sendo preparados. Enquanto isso, peça o documento pelo {
+            canalPrincipal.nome
+          } — a gente envia por lá.
+        </p>
+      )
+    }
+
+    <p class="doc-foot">
+      Precisa de um documento que não está aqui — declaração de frequência, carta para
+      o trabalho ou para a escola?{' '}
+      <a href={canalPrincipal.href} target="_blank" rel="noopener">
+        Fale com a administração
+      </a>.
+    </p>
+  </div>
+</section>
+
+<style>
+  .doc-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .doc {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    height: 100%;
+    padding: 1.35rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius-lg);
+    background: var(--branco);
+    color: var(--texto);
+    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  a.doc:hover {
+    text-decoration: none;
+    border-color: var(--verde);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .doc--soon {
+    background: var(--areia-escura);
+    border-style: dashed;
+  }
+
+  .doc-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: rgba(4, 69, 4, 0.08);
+    color: var(--verde);
+  }
+
+  .doc--soon .doc-icon {
+    background: rgba(198, 157, 19, 0.14);
+    color: var(--dourado-escuro);
+  }
+
+  .doc-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+  }
+
+  .doc-text strong {
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .doc-desc {
+    font-size: 0.9375rem;
+    color: var(--texto-suave);
+  }
+
+  .doc-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+  }
+
+  .doc-size {
+    font-size: 0.8125rem;
+    color: var(--texto-suave);
+  }
+
+  .doc-soon {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--dourado-escuro);
+    background: rgba(198, 157, 19, 0.16);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+
+  .doc-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    color: var(--verde);
+    background: var(--areia-escura);
+  }
+
+  a.doc:hover .doc-action {
+    background: var(--verde);
+    color: #fff;
+  }
+
+  .doc-empty {
+    margin-top: 1.25rem;
+  }
+
+  .doc-foot {
+    margin-top: 1.5rem;
+    font-size: 0.9375rem;
+    color: var(--texto-suave);
+  }
+
+  @media (max-width: 860px) {
+    .doc-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

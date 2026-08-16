@@ -1,0 +1,444 @@
+---
+import Icon from './Icon.astro';
+import { books, requestForm, canalPrincipal } from '../config';
+
+// Formulário único para três assuntos. A troca dos campos é feita só com CSS:
+// os três radios ficam como filhos diretos do <form>, escondidos, e cada bloco
+// condicional é irmão deles — `#tipo-x:checked ~ .campos .so-x { display: grid }`.
+// Sem JavaScript, e funciona antes de qualquer script carregar.
+//
+// Envio por Netlify Forms. Regras que não dá para quebrar:
+//  - o <input name="form-name"> precisa bater com o `name` do <form>;
+//  - nenhum campo condicional pode ser `required` — o navegador se recusa a
+//    enviar quando um campo obrigatório está escondido;
+//  - o honeypot (`bot-field`) é o filtro de spam, e fica fora da vista.
+const { name: formName, successPage, types } = requestForm;
+---
+
+<section id="pedidos" class="section pedidos">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Livros e pedidos</span>
+      <h2>Peça livros islâmicos ou marque uma visita</h2>
+      <p>
+        Enviamos livros sobre o Islam, <strong>sem custo</strong>, para quem mora no {
+          books.regionLabel
+        }. O mesmo formulário serve para agendar uma visita à mesquita ou tratar de
+        qualquer outro assunto com a administração.
+      </p>
+    </div>
+
+    <div class="ped-grid">
+      <aside class="ped-info">
+        <h3>Como funciona o envio</h3>
+        <ol>
+          <li>Você escolhe “{types[0].label}” e preenche o endereço.</li>
+          <li>A gente confere o pedido e responde pelo contato que você deixar.</li>
+          <li>Os livros são postados para o seu endereço.</li>
+        </ol>
+        <p class="ped-note">{books.note}</p>
+
+        <h3 class="ped-h3">Estados atendidos</h3>
+        <ul class="ped-estados">
+          {books.states.map((uf) => <li>{uf}</li>)}
+        </ul>
+
+        <p class="ped-note">
+          Mora fora do {books.regionLabel}? Escreva mesmo assim pelo {canalPrincipal.nome} —
+          a gente tenta indicar alguém mais perto de você.
+        </p>
+      </aside>
+
+      <form
+        class="form"
+        name={formName}
+        method="POST"
+        action={successPage}
+        data-netlify="true"
+        netlify-honeypot="bot-field"
+      >
+        <!-- Netlify: identifica o formulário no painel. -->
+        <input type="hidden" name="form-name" value={formName} />
+
+        <!-- Honeypot: humano nenhum vê este campo; robô preenche e é descartado. -->
+        <p class="honeypot">
+          <label>Não preencha este campo: <input name="bot-field" tabindex="-1" /></label>
+        </p>
+
+        <p class="form-pergunta" id="pergunta-assunto">O que você precisa?</p>
+
+        {
+          types.map((t, i) => (
+            <input
+              class="tipo-radio visually-hidden"
+              type="radio"
+              name="assunto"
+              id={`tipo-${t.id}`}
+              value={t.value}
+              checked={i === 0}
+              aria-describedby="pergunta-assunto"
+            />
+          ))
+        }
+
+        <div class="tipo-grid">
+          {
+            types.map((t) => (
+              <label for={`tipo-${t.id}`} class="tipo-card">
+                <Icon name={t.icon} size={20} />
+                <span>
+                  <strong>{t.label}</strong>
+                  <small>{t.hint}</small>
+                </span>
+              </label>
+            ))
+          }
+        </div>
+
+        <div class="campos">
+          <!-- Comuns a todos os assuntos -->
+          <div class="campo">
+            <label for="f-nome">Nome completo</label>
+            <input type="text" id="f-nome" name="nome" required autocomplete="name" />
+          </div>
+
+          <div class="campo">
+            <label for="f-contato">E-mail, telefone ou @ do Instagram</label>
+            <input
+              type="text"
+              id="f-contato"
+              name="contato"
+              required
+              placeholder="para a gente conseguir te responder"
+            />
+          </div>
+
+          <!-- Só para o pedido de livros -->
+          <div class="so-livros campo">
+            <label for="f-estado">Estado</label>
+            <select id="f-estado" name="estado">
+              <option value="">Selecione…</option>
+              {books.states.map((uf) => <option value={uf}>{uf}</option>)}
+              <option value="Fora do Nordeste">Moro fora do Nordeste</option>
+            </select>
+          </div>
+
+          <div class="so-livros campo">
+            <label for="f-cidade">Cidade</label>
+            <input type="text" id="f-cidade" name="cidade" autocomplete="address-level2" />
+          </div>
+
+          <div class="so-livros campo campo--largo">
+            <label for="f-endereco">Endereço completo para envio</label>
+            <input
+              type="text"
+              id="f-endereco"
+              name="endereco"
+              placeholder="rua, número, complemento, bairro e CEP"
+              autocomplete="street-address"
+            />
+          </div>
+
+          <!-- Só para a visita -->
+          <div class="so-visita campo">
+            <label for="f-pessoas">Quantas pessoas</label>
+            <input type="number" id="f-pessoas" name="pessoas" min="1" placeholder="1" />
+          </div>
+
+          <div class="so-visita campo">
+            <label for="f-quando">Dia pretendido</label>
+            <input type="date" id="f-quando" name="quando" />
+          </div>
+
+          <div class="so-visita campo campo--largo">
+            <p class="campo-aviso">
+              <Icon name="info" size={16} />
+              A mesquita abre sexta e sábado, das 11h30 às 13h00. Para outro dia, diga na
+              mensagem — a gente vê o que dá para combinar.
+            </p>
+          </div>
+
+          <!-- Só para outro assunto -->
+          <div class="so-outro campo campo--largo">
+            <label for="f-titulo">Assunto</label>
+            <input
+              type="text"
+              id="f-titulo"
+              name="titulo"
+              placeholder="em poucas palavras, do que se trata"
+            />
+          </div>
+
+          <!-- Comum de novo -->
+          <div class="campo campo--largo">
+            <label for="f-mensagem">Mensagem</label>
+            <textarea id="f-mensagem" name="mensagem" rows="4" required></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary form-enviar">
+          <Icon name="send" size={18} /> Enviar pedido
+        </button>
+
+        <p class="form-rodape">
+          Usamos o que você escrever só para responder ao seu pedido. Não publicamos nem
+          repassamos seus dados.
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pedidos {
+    background: var(--branco);
+    border-block: 1px solid var(--borda);
+  }
+
+  .ped-grid {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  /* ---------- Coluna explicativa ---------- */
+  .ped-info {
+    padding: 1.75rem;
+    border-radius: var(--radius-lg);
+    background: var(--areia);
+    border: 1px solid var(--borda);
+  }
+
+  .ped-info h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ped-h3 {
+    margin-top: 1.5rem;
+  }
+
+  .ped-info ol {
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    color: var(--texto-suave);
+  }
+
+  .ped-note {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: var(--texto-suave);
+  }
+
+  .ped-estados {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .ped-estados li {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(4, 69, 4, 0.08);
+    color: var(--verde);
+  }
+
+  /* ---------- Formulário ---------- */
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .form-pergunta {
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+
+  .tipo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .tipo-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius);
+    background: var(--areia);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .tipo-card:hover {
+    border-color: var(--verde-claro);
+  }
+
+  .tipo-card :global(svg) {
+    color: var(--texto-suave);
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .tipo-card span {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+
+  .tipo-card strong {
+    font-size: 0.875rem;
+  }
+
+  .tipo-card small {
+    font-size: 0.75rem;
+    color: var(--texto-suave);
+  }
+
+  /* O radio escolhido pinta o cartão correspondente... */
+  #tipo-livros:checked ~ .tipo-grid label[for='tipo-livros'],
+  #tipo-visita:checked ~ .tipo-grid label[for='tipo-visita'],
+  #tipo-outro:checked ~ .tipo-grid label[for='tipo-outro'] {
+    border-color: var(--verde);
+    background: #f2f7f2;
+    box-shadow: inset 0 0 0 1px var(--verde);
+  }
+
+  #tipo-livros:checked ~ .tipo-grid label[for='tipo-livros'] :global(svg),
+  #tipo-visita:checked ~ .tipo-grid label[for='tipo-visita'] :global(svg),
+  #tipo-outro:checked ~ .tipo-grid label[for='tipo-outro'] :global(svg) {
+    color: var(--verde);
+  }
+
+  /* Foco do teclado: o radio é invisível, então o anel vai no cartão. */
+  #tipo-livros:focus-visible ~ .tipo-grid label[for='tipo-livros'],
+  #tipo-visita:focus-visible ~ .tipo-grid label[for='tipo-visita'],
+  #tipo-outro:focus-visible ~ .tipo-grid label[for='tipo-outro'] {
+    outline: 3px solid var(--dourado);
+    outline-offset: 2px;
+  }
+
+  .campos {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .campo--largo {
+    grid-column: 1 / -1;
+  }
+
+  /* Mostra só os campos do assunto escolhido.
+     Estas regras vêm DEPOIS de `.campo` de propósito: `.campo` também define
+     `display`, e com a mesma especificidade quem vem por último ganha. Por isso
+     `.campos .so-x` (duas classes) — assim nenhuma regra posterior de `.campo`
+     volta a revelar um campo escondido. */
+  .campos .so-livros,
+  .campos .so-visita,
+  .campos .so-outro {
+    display: none;
+  }
+
+  #tipo-livros:checked ~ .campos .so-livros,
+  #tipo-visita:checked ~ .campos .so-visita,
+  #tipo-outro:checked ~ .campos .so-outro {
+    display: flex;
+  }
+
+  .campo label {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .campo input,
+  .campo select,
+  .campo textarea {
+    font-family: inherit;
+    font-size: 0.9375rem;
+    color: var(--texto);
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    background: var(--branco);
+    width: 100%;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .campo textarea {
+    resize: vertical;
+    min-height: 6rem;
+  }
+
+  .campo input:focus,
+  .campo select:focus,
+  .campo textarea:focus {
+    outline: none;
+    border-color: var(--verde);
+    box-shadow: 0 0 0 3px rgba(4, 69, 4, 0.1);
+  }
+
+  .campo input::placeholder,
+  .campo textarea::placeholder {
+    color: #93a091;
+  }
+
+  .campo-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--texto-suave);
+    background: var(--areia-escura);
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem;
+  }
+
+  .campo-aviso :global(svg) {
+    color: var(--dourado-escuro);
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  .form-enviar {
+    margin-top: 1.5rem;
+    cursor: pointer;
+  }
+
+  .form-rodape {
+    margin-top: 0.9rem;
+    font-size: 0.8125rem;
+    color: var(--texto-suave);
+  }
+
+  @media (max-width: 980px) {
+    .ped-grid {
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .tipo-grid,
+    .campos {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

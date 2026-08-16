@@ -1,0 +1,197 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { site, contact } from '../config';
+
+const year = new Date().getFullYear();
+const { street, district, city, state, zip } = contact.address;
+const temEndereco = Boolean(street);
+
+const navLinks = [
+  { href: '/#horarios', label: 'Horários e abertura' },
+  { href: '/#sobre', label: 'Sobre o centro' },
+  { href: '/#atividades', label: 'Atividades' },
+  { href: '/#pedidos', label: 'Livros e pedidos' },
+  { href: '/#documentos', label: 'Documentos' },
+  { href: '/#galeria', label: 'Galeria' },
+  { href: '/#doacoes', label: 'Doações' },
+];
+---
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <Logo size={56} tone="branco" />
+      <p class="footer-name">{site.name}</p>
+      <p class="footer-tagline">{site.tagline}</p>
+    </div>
+
+    <nav class="footer-col" aria-label="Seções do site">
+      <h3>Navegação</h3>
+      <ul>
+        {navLinks.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </nav>
+
+    <div class="footer-col">
+      <h3>Endereço</h3>
+      {
+        temEndereco ? (
+          <p>
+            {street}
+            <br />
+            {district} — {city}/{state}
+            <br />
+            CEP {zip}
+          </p>
+        ) : (
+          <p>
+            {city}/{state}
+            <br />
+            <span class="footer-nota">Endereço completo em confirmação.</span>
+          </p>
+        )
+      }
+      <a href={contact.mapsLink} target="_blank" rel="noopener">
+        <Icon name="pin" size={15} /> Como chegar
+      </a>
+    </div>
+
+    <div class="footer-col">
+      <h3>Contato</h3>
+      {
+        contact.instagram && (
+          <p>
+            <a href={contact.instagram} target="_blank" rel="noopener">
+              <Icon name="instagram" size={15} /> {contact.instagramHandle}
+            </a>
+          </p>
+        )
+      }
+      {
+        contact.whatsapp && (
+          <p>
+            <a href={contact.whatsapp} target="_blank" rel="noopener">
+              <Icon name="phone" size={15} /> {contact.phone}
+            </a>
+          </p>
+        )
+      }
+      {
+        contact.email && (
+          <p>
+            <a href={`mailto:${contact.email}`}>
+              <Icon name="mail" size={15} /> {contact.email}
+            </a>
+          </p>
+        )
+      }
+    </div>
+  </div>
+
+  <div class="container footer-bottom">
+    <span>© {year} {site.name}</span>
+    <span class="ar">وَأَنَّ ٱلْمَسَٰجِدَ لِلَّهِ</span>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--verde-escuro);
+    color: rgba(255, 255, 255, 0.82);
+    padding-top: 3.5rem;
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .footer-name {
+    font-weight: 700;
+    color: #fff;
+    margin-top: 0.9rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.9375rem;
+    margin-top: 0.35rem;
+    max-width: 24rem;
+  }
+
+  .footer-nota {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+  }
+
+  .footer-col h3 {
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dourado-claro);
+    margin-bottom: 0.9rem;
+  }
+
+  .footer-col p {
+    font-size: 0.9375rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .footer-col ul {
+    list-style: none;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .footer-col li {
+    font-size: 0.9375rem;
+  }
+
+  .footer a {
+    color: rgba(255, 255, 255, 0.9);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .footer a:hover {
+    color: var(--dourado-claro);
+    text-decoration: none;
+  }
+
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .footer-bottom .ar {
+    font-size: 1.125rem;
+    color: var(--dourado-claro);
+  }
+
+  @media (max-width: 900px) {
+    .footer-inner {
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .footer-inner {
+      grid-template-columns: 1fr;
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

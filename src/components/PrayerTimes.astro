@@ -1,0 +1,548 @@
+---
+import Icon from './Icon.astro';
+import { location, prayers, iqamah, openingHours } from '../config';
+
+// Os horários são calculados no navegador pela API pública Aladhan
+// (api.aladhan.com), porque o site é estático: se fossem gerados no build,
+// congelariam no dia do deploy. O HTML abaixo já vem com a estrutura pronta
+// e placeholders "--:--", então a página não pula quando os dados chegam.
+const cfg = {
+  lat: location.latitude,
+  lng: location.longitude,
+  method: location.calculationMethod,
+  tz: location.timezone,
+  iqamah,
+};
+---
+
+<section id="horarios" class="section horarios">
+  <div class="container">
+    <!-- O horário de funcionamento vem antes dos horários de oração de
+         propósito: é o dado que o visitante precisa para não vir à toa. -->
+    <div class="abertura">
+      <div class="abertura-head">
+        <Icon name="clock" size={20} />
+        <h2>Quando a mesquita abre</h2>
+      </div>
+
+      <ul class="abertura-dias">
+        {
+          openingHours.days.map((d) => (
+            <li>
+              <strong>{d.day}</strong>
+              <span class="abertura-hora">{d.time}</span>
+              {d.note && <span class="tag">{d.note}</span>}
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="abertura-nota">{openingHours.closedNote}</p>
+    </div>
+
+    <div class="hor-head">
+      <div>
+        <span class="eyebrow">Horários de oração</span>
+        <h2>Hoje em João Pessoa</h2>
+        <p class="hor-date">
+          <span id="pt-date">—</span>
+          <span class="hor-hijri" id="pt-hijri"></span>
+        </p>
+      </div>
+
+      <div class="hor-next" id="pt-next-card" hidden>
+        <span class="hor-next-label">Próxima oração</span>
+        <strong id="pt-next-name">—</strong>
+        <span class="hor-next-count" id="pt-next-count">—</span>
+      </div>
+    </div>
+
+    <ul class="hor-grid" id="pt-grid">
+      {
+        prayers.map((p) => (
+          <li class="hor-card" data-prayer={p.key}>
+            <span class="hor-name">
+              {p.pt}
+              <span class="ar hor-ar">{p.ar}</span>
+            </span>
+            <span class="hor-time" data-time>
+              --:--
+            </span>
+            <span class="hor-note">{iqamah[p.key] ? `Iqamah ${iqamah[p.key]}` : p.note}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="hor-error" id="pt-error" hidden>
+      Não foi possível carregar os horários agora. Tente recarregar a página ou
+      confira o quadro na mesquita.
+    </p>
+
+    <div class="hor-aviso">
+      <Icon name="info" size={22} />
+      <div>
+        <strong>Estes são os horários da cidade, não do funcionamento</strong>
+        <p>
+          O adhan calculado para João Pessoa serve para você rezar onde estiver. A
+          mesquita em si abre apenas nos horários listados acima.
+        </p>
+      </div>
+    </div>
+
+    <p class="hor-foot">
+      Cálculo por {' '}
+      <a href="https://aladhan.com" target="_blank" rel="noopener">Aladhan</a>, método Muslim
+      World League, para as coordenadas da mesquita. O horário do adhan pode variar
+      um ou dois minutos em relação a outros calendários.
+    </p>
+  </div>
+</section>
+
+<script is:inline define:vars={{ cfg }}>
+  (function () {
+    var grid = document.getElementById('pt-grid');
+    var errorEl = document.getElementById('pt-error');
+    var nextCard = document.getElementById('pt-next-card');
+    var nextName = document.getElementById('pt-next-name');
+    var nextCount = document.getElementById('pt-next-count');
+    var dateEl = document.getElementById('pt-date');
+    var hijriEl = document.getElementById('pt-hijri');
+    if (!grid) return;
+
+    var ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+    // "05:12 (-03)" -> 312 (minutos desde a meia-noite).
+    function toMinutes(raw) {
+      var m = /(\d{1,2}):(\d{2})/.exec(String(raw || ''));
+      if (!m) return null;
+      return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    }
+
+    function hhmm(raw) {
+      var m = /(\d{1,2}):(\d{2})/.exec(String(raw || ''));
+      return m ? (m[1].length === 1 ? '0' : '') + m[1] + ':' + m[2] : '--:--';
+    }
+
+    // O relógio que importa é o da mesquita, não o de quem visita: alguém
+    // olhando de São Paulo ou de fora do Brasil precisa ver a contagem até o
+    // adhan em João Pessoa, e não até o mesmo número no fuso dele.
+    function nowAtMosque() {
+      var parts = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: cfg.tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).formatToParts(new Date());
+      var v = {};
+      parts.forEach(function (p) {
+        v[p.type] = p.value;
+      });
+      var h = parseInt(v.hour, 10) % 24;
+      return h * 3600 + parseInt(v.minute, 10) * 60 + parseInt(v.second, 10);
+    }
+
+    function dateKey() {
+      // dd-mm-aaaa no fuso da mesquita — depois da meia-noite lá, o dia vira,
+      // mesmo que ainda seja ontem no navegador.
+      var p = new Intl.DateTimeFormat('en-GB', {
+        timeZone: cfg.tz,
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(new Date());
+      return p.replace(/\//g, '-');
+    }
+
+    function render(data) {
+      var timings = data.timings || {};
+      var cards = grid.querySelectorAll('[data-prayer]');
+      var minutes = {};
+
+      cards.forEach(function (card) {
+        var key = card.getAttribute('data-prayer');
+        var el = card.querySelector('[data-time]');
+        if (el) el.textContent = hhmm(timings[key]);
+        minutes[key] = toMinutes(timings[key]);
+      });
+
+      if (data.date) {
+        if (dateEl && data.date.gregorian) {
+          var g = data.date.gregorian;
+          dateEl.textContent = g.date ? formatDate(g) : '';
+        }
+        if (hijriEl && data.date.hijri) {
+          var h = data.date.hijri;
+          hijriEl.textContent = h.day + ' ' + h.month.en + ' ' + h.year + ' AH';
+        }
+      }
+
+      tick(minutes);
+      setInterval(function () {
+        tick(minutes);
+      }, 30000);
+    }
+
+    var WEEKDAYS = {
+      Sunday: 'Domingo',
+      Monday: 'Segunda-feira',
+      Tuesday: 'Terça-feira',
+      Wednesday: 'Quarta-feira',
+      Thursday: 'Quinta-feira',
+      Friday: 'Sexta-feira',
+      Saturday: 'Sábado',
+    };
+
+    function formatDate(g) {
+      var dmy = String(g.date || '').split('-');
+      var d = new Date(Date.UTC(+dmy[2], +dmy[1] - 1, +dmy[0]));
+      var label = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'UTC',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(d);
+      var wd = WEEKDAYS[g.weekday && g.weekday.en] || '';
+      return wd ? wd + ', ' + label : label;
+    }
+
+    function tick(minutes) {
+      var nowSec = nowAtMosque();
+      var next = null;
+      var past = {};
+
+      for (var i = 0; i < ORDER.length; i++) {
+        var key = ORDER[i];
+        var m = minutes[key];
+        if (m == null) continue;
+        if (m * 60 <= nowSec) past[key] = true;
+        else if (!next) next = key;
+      }
+
+      grid.querySelectorAll('[data-prayer]').forEach(function (card) {
+        var k = card.getAttribute('data-prayer');
+        card.classList.toggle('is-next', k === next);
+        card.classList.toggle('is-past', !!past[k]);
+      });
+
+      if (!nextCard) return;
+
+      // Depois do Isha a próxima é o Fajr de amanhã: some 24h ao alvo em vez
+      // de esconder a contagem, senão o card fica vazio a noite inteira.
+      var targetKey = next || ORDER[0];
+      var targetSec = minutes[targetKey] * 60 + (next ? 0 : 24 * 3600);
+      var diff = targetSec - nowSec;
+      if (diff < 0) diff += 24 * 3600;
+
+      var h = Math.floor(diff / 3600);
+      var mnt = Math.floor((diff % 3600) / 60);
+      nextCard.hidden = false;
+      if (nextName) nextName.textContent = targetKey;
+      if (nextCount) {
+        nextCount.textContent =
+          h > 0 ? 'em ' + h + 'h ' + mnt + 'min' : 'em ' + Math.max(mnt, 1) + ' min';
+      }
+    }
+
+    function fail() {
+      if (errorEl) errorEl.hidden = false;
+    }
+
+    var key = dateKey();
+    var cacheId = 'pt_' + key + '_' + cfg.method;
+
+    // Um dia inteiro de horários cabe no localStorage; recarregar a página não
+    // precisa bater na API de novo.
+    try {
+      var cached = localStorage.getItem(cacheId);
+      if (cached) {
+        render(JSON.parse(cached));
+        return;
+      }
+    } catch (e) {
+      /* storage bloqueado — segue pela rede */
+    }
+
+    var url =
+      'https://api.aladhan.com/v1/timings/' +
+      key +
+      '?latitude=' + cfg.lat +
+      '&longitude=' + cfg.lng +
+      '&method=' + cfg.method +
+      '&timezonestring=' + encodeURIComponent(cfg.tz);
+
+    fetch(url)
+      .then(function (r) {
+        if (!r.ok) throw new Error('http ' + r.status);
+        return r.json();
+      })
+      .then(function (json) {
+        if (!json || !json.data || !json.data.timings) throw new Error('payload');
+        try {
+          localStorage.setItem(cacheId, JSON.stringify(json.data));
+        } catch (e) {
+          /* ignore */
+        }
+        render(json.data);
+      })
+      .catch(fail);
+  })();
+</script>
+
+<style>
+  .horarios {
+    background: var(--branco);
+    border-block: 1px solid var(--borda);
+  }
+
+  .hor-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  .hor-head h2 {
+    font-size: clamp(1.75rem, 4vw, 2.4rem);
+  }
+
+  .hor-date {
+    color: var(--texto-suave);
+    font-size: 0.9375rem;
+    margin-top: 0.4rem;
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .hor-hijri {
+    color: var(--dourado-escuro);
+    font-weight: 600;
+  }
+
+  .hor-next {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    background: var(--verde);
+    color: #fff;
+    padding: 0.9rem 1.4rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    min-width: 12rem;
+  }
+
+  .hor-next-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dourado-claro);
+  }
+
+  .hor-next strong {
+    font-size: 1.35rem;
+    line-height: 1.2;
+  }
+
+  .hor-next-count {
+    font-size: 0.9375rem;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .hor-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.85rem;
+  }
+
+  .hor-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.15rem 1rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius);
+    background: var(--areia);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .hor-card.is-next {
+    border-color: var(--dourado);
+    background: #fffdf5;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hor-card.is-past {
+    opacity: 0.62;
+  }
+
+  .hor-name {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+
+  .hor-ar {
+    font-size: 1rem;
+    color: var(--texto-suave);
+  }
+
+  .hor-time {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: var(--verde);
+  }
+
+  .hor-note {
+    font-size: 0.8125rem;
+    color: var(--texto-suave);
+  }
+
+  .hor-error {
+    margin-top: 1rem;
+    font-size: 0.9375rem;
+    color: #9a3412;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+  }
+
+  /* ---------- Horário de funcionamento ---------- */
+  .abertura {
+    margin-bottom: 3rem;
+    padding: 1.75rem;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(150deg, var(--verde), var(--verde-escuro));
+    color: #fff;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .abertura-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .abertura-head :global(svg) {
+    color: var(--dourado-claro);
+    flex-shrink: 0;
+  }
+
+  .abertura-head h2 {
+    font-size: clamp(1.3rem, 3vw, 1.6rem);
+  }
+
+  .abertura-dias {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+  }
+
+  .abertura-dias li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding: 0.9rem 1.15rem;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(233, 198, 75, 0.25);
+  }
+
+  .abertura-dias strong {
+    font-size: 0.9375rem;
+  }
+
+  .abertura-hora {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--dourado-claro);
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .abertura-dias .tag {
+    background: rgba(233, 198, 75, 0.18);
+    color: var(--dourado-claro);
+    flex-basis: 100%;
+    align-self: flex-start;
+    width: fit-content;
+  }
+
+  .abertura-nota {
+    margin-top: 1.1rem;
+    font-size: 0.9375rem;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  /* ---------- Aviso: cidade ≠ mesquita ---------- */
+  .hor-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    margin-top: 1.5rem;
+    padding: 1.15rem 1.35rem;
+    border-radius: var(--radius);
+    background: var(--areia-escura);
+    border: 1px solid var(--borda);
+  }
+
+  .hor-aviso :global(svg) {
+    color: var(--dourado-escuro);
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  .hor-aviso p {
+    font-size: 0.9375rem;
+    color: var(--texto-suave);
+  }
+
+  .hor-foot {
+    margin-top: 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--texto-suave);
+  }
+
+  @media (max-width: 900px) {
+    .hor-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 620px) {
+    .abertura-dias {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 460px) {
+    .hor-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hor-card {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .hor-time {
+      font-size: 1.4rem;
+    }
+  }
+</style>

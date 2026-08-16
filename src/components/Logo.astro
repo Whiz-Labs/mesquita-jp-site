@@ -1,0 +1,51 @@
+---
+// Emblema do centro: o monumento em prata sobre o Alcorão em dourado, dentro
+// do disco verde. O arquivo é `public/logo.png` (versão sem texto, que é a
+// legível em tamanho pequeno). O header, o hero e o rodapé passam todos por
+// aqui — trocar a arte é trocar este arquivo.
+import { site } from '../config';
+
+interface Props {
+  size?: number;
+  /**
+   * 'verde' sobre fundo claro; 'branco' sobre o verde escuro — nesse caso um
+   * anel dourado fino separa o disco do fundo, que é quase da mesma cor.
+   */
+  tone?: 'verde' | 'branco';
+  /** Só decorativo (quando o nome já aparece escrito ao lado). */
+  decorative?: boolean;
+  class?: string;
+}
+
+const {
+  size = 40,
+  tone = 'verde',
+  decorative = true,
+  class: className = '',
+} = Astro.props;
+---
+
+<img
+  class:list={['logo', tone === 'branco' && 'logo--dark', className]}
+  src="/logo.png"
+  width={size}
+  height={size}
+  alt={decorative ? '' : `Emblema do ${site.name}`}
+  aria-hidden={decorative ? 'true' : undefined}
+  loading="eager"
+  decoding="async"
+  style={`--logo-size:${size}px`}
+/>
+
+<style>
+  .logo {
+    width: var(--logo-size);
+    height: var(--logo-size);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .logo--dark {
+    box-shadow: 0 0 0 1px rgba(233, 198, 75, 0.35);
+  }
+</style>

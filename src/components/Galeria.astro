@@ -1,0 +1,134 @@
+---
+import Icon from './Icon.astro';
+import { gallery, canalPrincipal } from '../config';
+
+// A lista de fotos ainda está vazia (`gallery` em src/config.ts). Enquanto
+// estiver, a seção mostra um aviso honesto em vez de fotos de banco de imagens
+// que não são da mesquita.
+const temFotos = gallery.length > 0;
+---
+
+<section id="galeria" class="section galeria">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Galeria</span>
+      <h2>A mesquita por dentro</h2>
+      <p>
+        Fotos do espaço, das aulas e dos encontros da comunidade.
+      </p>
+    </div>
+
+    {
+      temFotos ? (
+        <div class="gal-grid">
+          {gallery.map((foto, i) => (
+            <figure class="gal-item">
+              <img
+                src={foto.src}
+                alt={foto.alt}
+                loading={i < 3 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+              {foto.caption && <figcaption>{foto.caption}</figcaption>}
+            </figure>
+          ))}
+        </div>
+      ) : (
+        <div class="gal-vazia">
+          <div class="gal-vazia-marca" aria-hidden="true">
+            <img src="/logo.png" alt="" width="120" height="120" />
+          </div>
+          <div>
+            <h3>As fotos ainda estão por vir</h3>
+            <p>
+              Estamos reunindo o material do espaço e das atividades. Tem fotos boas de
+              algum evento da comunidade? Mande para a gente — com a autorização de quem
+              aparece nelas.
+            </p>
+            <a href={canalPrincipal.href} class="btn btn-ghost" target="_blank" rel="noopener">
+              <Icon name="image" size={18} /> Enviar fotos
+            </a>
+          </div>
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  /* Alterna com o fundo claro da seção de documentos, logo acima. */
+  .galeria {
+    background: var(--areia-escura);
+  }
+
+  .gal-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .gal-item {
+    margin: 0;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--borda);
+    background: var(--branco);
+  }
+
+  .gal-item img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  .gal-item figcaption {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--texto-suave);
+  }
+
+  /* ---------- Estado vazio ---------- */
+  .gal-vazia {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 2rem;
+    padding: 2.25rem;
+    border: 1px dashed var(--borda);
+    border-radius: var(--radius-lg);
+    background: var(--branco);
+  }
+
+  .gal-vazia-marca img {
+    opacity: 0.75;
+  }
+
+  .gal-vazia h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .gal-vazia p {
+    color: var(--texto-suave);
+    max-width: 52ch;
+    margin-bottom: 1.15rem;
+  }
+
+  @media (max-width: 860px) {
+    .gal-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .gal-vazia {
+      grid-template-columns: 1fr;
+      justify-items: start;
+      gap: 1.25rem;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .gal-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

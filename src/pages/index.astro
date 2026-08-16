@@ -1,0 +1,801 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import PrayerTimes from '../components/PrayerTimes.astro';
+import Formulario from '../components/Formulario.astro';
+import Documentos from '../components/Documentos.astro';
+import Galeria from '../components/Galeria.astro';
+import Icon from '../components/Icon.astro';
+import Logo from '../components/Logo.astro';
+import {
+  site,
+  contact,
+  canalPrincipal,
+  activities,
+  donations,
+  location,
+  openingHours,
+  books,
+} from '../config';
+
+const pageTitle = `${site.name} — Mesquita em João Pessoa (PB)`;
+const { street, district, city, state, zip } = contact.address;
+
+// O endereço por extenso ainda não foi confirmado (só o ponto no mapa). Enquanto
+// `street` estiver vazio o site diz isso em vez de imprimir um endereço meio
+// preenchido.
+const temEndereco = Boolean(street);
+const fullAddress = [street, district, `${city} — ${state}`, zip]
+  .filter(Boolean)
+  .join(', ');
+
+const atalhos = [
+  {
+    href: '#horarios',
+    icon: 'clock',
+    label: 'Quando abrimos',
+    hint: 'Sexta e sábado, 11h30–13h00',
+  },
+  {
+    href: '#pedidos',
+    icon: 'book',
+    label: 'Pedir livros islâmicos',
+    hint: `Envio gratuito no ${books.regionLabel}`,
+  },
+  { href: '#documentos', icon: 'file', label: 'Documentos', hint: 'Modelos e guias' },
+];
+---
+
+<BaseLayout title={pageTitle}>
+  <Header />
+
+  <main id="conteudo">
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div class="hero-pattern" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <div class="hero-emblema">
+          <Logo size={132} tone="branco" decorative={false} />
+        </div>
+
+        <p class="ar bismillah">بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>
+        <h1>{site.fullName}</h1>
+        <p class="hero-ar ar">{site.nameAr}</p>
+        <p class="hero-sub">{site.tagline}</p>
+
+        <div class="hero-cta">
+          <a href="#horarios" class="btn btn-gold">
+            <Icon name="clock" size={18} /> Ver horários de hoje
+          </a>
+          <a href={contact.mapsLink} class="btn btn-ghost" target="_blank" rel="noopener">
+            <Icon name="pin" size={18} /> Como chegar
+          </a>
+        </div>
+
+        <p class="hero-note">
+          Todos são bem-vindos — muçulmanos e não muçulmanos, moradores e visitantes.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= ATALHOS ================= -->
+    <nav class="atalhos" aria-label="Atalhos">
+      <div class="container atalhos-grid">
+        {
+          atalhos.map((a) => (
+            <a href={a.href} class="atalho">
+              <span class="atalho-icon">
+                <Icon name={a.icon} size={20} />
+              </span>
+              <span>
+                <strong>{a.label}</strong>
+                <small>{a.hint}</small>
+              </span>
+              <Icon name="arrow" size={18} class="atalho-seta" />
+            </a>
+          ))
+        }
+      </div>
+    </nav>
+
+    <!-- ================= HORÁRIOS ================= -->
+    <PrayerTimes />
+
+    <!-- ================= SOBRE ================= -->
+    <section id="sobre" class="section">
+      <div class="container sobre-grid">
+        <div>
+          <span class="eyebrow">Sobre nós</span>
+          <h2>Uma casa de Allah em João Pessoa</h2>
+          <p>
+            O {site.name} é o ponto de encontro dos muçulmanos da capital paraibana e de
+            quem está de passagem. A comunidade se reúne para a jumu'ah na sexta-feira e
+            também no sábado, no mesmo horário.
+          </p>
+          <p>
+            Somos poucos e a mesquita não fica aberta o dia inteiro — por isso o site
+            traz os horários de abertura logo no começo. Fora deles, o caminho é o
+            formulário ou o Instagram: a gente responde.
+          </p>
+
+          <!-- TODO: substituir por texto/histórico real fornecido pela administração
+               (quando o centro foi fundado, quem faz parte, o que já organizou). -->
+
+          <ul class="sobre-list">
+            <li>
+              <Icon name="clock" size={18} /> Aberta sexta e sábado, das 11h30 às 13h00
+            </li>
+            <li>
+              <Icon name="book" size={18} /> Envio gratuito de livros islâmicos para o {
+                books.regionLabel
+              }
+            </li>
+            <li><Icon name="compass" size={18} /> Qibla a {location.qiblaDegrees}° do norte</li>
+            <li>
+              <Icon name="users" size={18} /> Visitas de escolas e grupos mediante agendamento
+            </li>
+          </ul>
+        </div>
+
+        <aside class="sobre-card">
+          <blockquote>
+            <p class="ar">إِنَّمَا يَعْمُرُ مَسَاجِدَ ٱللَّهِ مَنْ ءَامَنَ بِٱللَّهِ وَٱلْيَوْمِ ٱلْـَٔاخِرِ</p>
+            <p class="quote-pt">
+              “Só cuidam das mesquitas de Allah aqueles que creem em Allah e no Último
+              Dia.”
+            </p>
+            <cite>Alcorão 9:18</cite>
+          </blockquote>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= ATIVIDADES ================= -->
+    <section id="atividades" class="section atividades">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">O que acontece aqui</span>
+          <h2>Atividades e serviços</h2>
+          <p>
+            Programação regular da mesquita. Datas e horários de cursos são anunciados no
+            WhatsApp e no Instagram.
+          </p>
+        </div>
+
+        <div class="cards">
+          {
+            activities.map((a) => (
+              <article class="card">
+                <span class="card-icon">
+                  <Icon name={a.icon} size={22} />
+                </span>
+                <h3>{a.title}</h3>
+                <p>{a.description}</p>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= LIVROS E PEDIDOS ================= -->
+    <Formulario />
+
+    <!-- ================= DOCUMENTOS ================= -->
+    <Documentos />
+
+    <!-- ================= GALERIA ================= -->
+    <Galeria />
+
+    <!-- ================= LOCALIZAÇÃO ================= -->
+    <section id="localizacao" class="section localizacao">
+      <div class="container loc-grid">
+        <div>
+          <span class="eyebrow">Localização</span>
+          <h2>Onde estamos</h2>
+          {
+            temEndereco ? (
+              <p class="loc-address">{fullAddress}</p>
+            ) : (
+              <p class="loc-address">
+                {city} — {state}
+                <span class="loc-address-nota">
+                  O endereço por extenso está sendo confirmado. O ponto no mapa ao lado é
+                  o da mesquita — use o botão abaixo para traçar a rota.
+                </span>
+              </p>
+            )
+          }
+          <p class="loc-help">
+            A mesquita abre {openingHours.days.map((d) => d.day.toLowerCase()).join(' e ')},
+            das 11h30 às 13h00. Chegue com alguma antecedência na sexta — é o dia de maior
+            movimento.
+          </p>
+          <div class="loc-actions">
+            <a href={contact.mapsLink} class="btn btn-primary" target="_blank" rel="noopener">
+              <Icon name="pin" size={18} /> Abrir no Google Maps
+            </a>
+            <a href={canalPrincipal.href} class="btn btn-ghost" target="_blank" rel="noopener">
+              <Icon name={canalPrincipal.icon} size={18} /> Tirar dúvida no {
+                canalPrincipal.nome
+              }
+            </a>
+          </div>
+        </div>
+
+        <!-- O iframe só entra quando `contact.mapsEmbed` for preenchido
+             (Maps → Compartilhar → Incorporar um mapa → copiar o src). -->
+        <div class="loc-map">
+          {
+            contact.mapsEmbed ? (
+              <iframe
+                src={contact.mapsEmbed}
+                title={`Mapa — ${site.name}`}
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+              />
+            ) : (
+              <div class="loc-map-placeholder">
+                <Icon name="pin" size={28} />
+                <p>O mapa entra aqui quando o endereço for confirmado.</p>
+              </div>
+            )
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= DOAÇÕES ================= -->
+    <section id="doacoes" class="section doacoes">
+      <div class="container doa-inner">
+        <div>
+          <span class="eyebrow">Sadaqa</span>
+          <h2>Apoie a mesquita</h2>
+          <p>{donations.note}</p>
+          {
+            donations.pixKey && (
+              <p class="doa-pix">
+                <strong>PIX:</strong> <code>{donations.pixKey}</code>
+                {donations.pixOwner && <span> · {donations.pixOwner}</span>}
+              </p>
+            )
+          }
+        </div>
+        <a href={canalPrincipal.href} class="btn btn-primary" target="_blank" rel="noopener">
+          <Icon name="heart" size={18} /> Quero contribuir
+        </a>
+      </div>
+    </section>
+
+    <!-- ================= CONTATO ================= -->
+    <section id="contato" class="section">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Contato</span>
+          <h2>Fale com a gente</h2>
+          <p>
+            Dúvidas sobre o Islam, pedido de visita, casamento, funeral ou aulas — escreva
+            sem cerimônia. O jeito mais rápido de falar com o centro é pelo Instagram: é
+            lá que a gente responde e avisa a programação.
+          </p>
+        </div>
+
+        <div class="contato-grid">
+          <a
+            class="contato-item contato-item--destaque"
+            href={contact.instagram}
+            target="_blank"
+            rel="noopener"
+          >
+            <Icon name="instagram" size={20} />
+            <span>
+              <strong>Instagram — fale por aqui</strong>
+              {contact.instagramHandle}
+            </span>
+          </a>
+
+          <a class="contato-item" href={contact.mapsLink} target="_blank" rel="noopener">
+            <Icon name="pin" size={20} />
+            <span>
+              <strong>Como chegar</strong>
+              {temEndereco ? `${street}, ${city}/${state}` : `Ver no Google Maps — ${city}/${state}`}
+            </span>
+          </a>
+
+          {
+            contact.whatsapp && (
+              <a class="contato-item" href={contact.whatsapp} target="_blank" rel="noopener">
+                <Icon name="phone" size={20} />
+                <span>
+                  <strong>WhatsApp</strong>
+                  {contact.phone}
+                </span>
+              </a>
+            )
+          }
+
+          {
+            contact.email && (
+              <a class="contato-item" href={`mailto:${contact.email}`}>
+                <Icon name="mail" size={20} />
+                <span>
+                  <strong>E-mail</strong>
+                  {contact.email}
+                </span>
+              </a>
+            )
+          }
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(165deg, var(--verde-medio) 0%, var(--verde-escuro) 100%);
+    color: #fff;
+    padding-block: clamp(3rem, 8vw, 5.5rem);
+    text-align: center;
+  }
+
+  /* Padrão geométrico discreto, feito só com gradientes — sem imagem. */
+  .hero-pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.13;
+    background-image:
+      repeating-linear-gradient(45deg, transparent 0 22px, rgba(233, 198, 75, 0.5) 22px 23px),
+      repeating-linear-gradient(-45deg, transparent 0 22px, rgba(233, 198, 75, 0.5) 22px 23px);
+    mask-image: radial-gradient(circle at 50% 38%, #000 8%, transparent 70%);
+  }
+
+  .hero-inner {
+    position: relative;
+  }
+
+  /* Halo dourado atrás do emblema — o mesmo anel que ele já tem no logo. */
+  .hero-emblema {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-emblema :global(img) {
+    box-shadow:
+      0 0 0 1px rgba(233, 198, 75, 0.45),
+      0 0 0 10px rgba(233, 198, 75, 0.07),
+      0 18px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .bismillah {
+    font-size: clamp(1.25rem, 3.2vw, 1.75rem);
+    color: var(--dourado-claro);
+    margin-bottom: 1.25rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 5.5vw, 3.4rem);
+    max-width: 20ch;
+    margin-inline: auto;
+  }
+
+  .hero-ar {
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    color: rgba(255, 255, 255, 0.78);
+    margin-top: 0.75rem;
+  }
+
+  .hero-sub {
+    max-width: 46ch;
+    margin: 1.1rem auto 0;
+    font-size: clamp(1rem, 2.2vw, 1.15rem);
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .hero-cta {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .hero .btn-ghost {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  .hero .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .hero-note {
+    margin-top: 1.4rem;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  /* ---------- Atalhos ---------- */
+  .atalhos {
+    background: var(--areia-escura);
+    border-bottom: 1px solid var(--borda);
+  }
+
+  .atalhos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    padding-block: 1.25rem;
+  }
+
+  .atalho {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.9rem 1.15rem;
+    border-radius: var(--radius);
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    color: var(--texto);
+    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .atalho:hover {
+    text-decoration: none;
+    border-color: var(--verde);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .atalho-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba(4, 69, 4, 0.08);
+    color: var(--verde);
+  }
+
+  .atalho span:not(.atalho-icon) {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+
+  .atalho strong {
+    font-size: 0.9375rem;
+  }
+
+  .atalho small {
+    font-size: 0.8125rem;
+    color: var(--texto-suave);
+  }
+
+  .atalho :global(.atalho-seta) {
+    margin-left: auto;
+    color: var(--dourado-escuro);
+    flex-shrink: 0;
+  }
+
+  /* ---------- Sobre ---------- */
+  .sobre-grid {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .sobre-grid h2 {
+    font-size: clamp(1.75rem, 4vw, 2.4rem);
+    margin-bottom: 1rem;
+  }
+
+  .sobre-grid p {
+    color: var(--texto-suave);
+    margin-bottom: 1rem;
+  }
+
+  .sobre-list {
+    list-style: none;
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .sobre-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.9375rem;
+  }
+
+  .sobre-list :global(svg) {
+    color: var(--dourado-escuro);
+    flex-shrink: 0;
+  }
+
+  .sobre-card {
+    position: relative;
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* Fio dourado no topo do cartão, ecoando o anel do emblema. */
+  .sobre-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--dourado), var(--dourado-claro));
+  }
+
+  .sobre-card .ar {
+    font-size: 1.4rem;
+    color: var(--verde);
+    margin-bottom: 0.9rem;
+  }
+
+  .quote-pt {
+    color: var(--texto) !important;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+
+  .sobre-card cite {
+    display: block;
+    margin-top: 0.6rem;
+    font-style: normal;
+    font-size: 0.875rem;
+    color: var(--dourado-escuro);
+    font-weight: 700;
+  }
+
+  /* ---------- Atividades ---------- */
+  .atividades {
+    background: var(--areia-escura);
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.15rem;
+  }
+
+  .card {
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: var(--radius-lg);
+    padding: 1.6rem;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 12px;
+    background: rgba(4, 69, 4, 0.08);
+    color: var(--verde);
+    margin-bottom: 1rem;
+  }
+
+  .card h3 {
+    font-size: 1.0625rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .card p {
+    font-size: 0.9375rem;
+    color: var(--texto-suave);
+  }
+
+  /* ---------- Localização ---------- */
+  .localizacao {
+    background: var(--branco);
+    border-block: 1px solid var(--borda);
+  }
+
+  .loc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+
+  .loc-grid h2 {
+    font-size: clamp(1.75rem, 4vw, 2.4rem);
+    margin-bottom: 1rem;
+  }
+
+  .loc-address {
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+
+  .loc-address-nota {
+    display: block;
+    margin-top: 0.4rem;
+    font-weight: 400;
+    font-size: 0.9375rem;
+    color: var(--texto-suave);
+    max-width: 46ch;
+  }
+
+  .loc-help {
+    color: var(--texto-suave);
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+  }
+
+  .loc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: 1.5rem;
+  }
+
+  .loc-map {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--borda);
+    background: var(--areia-escura);
+  }
+
+  .loc-map iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .loc-map-placeholder {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    color: var(--texto-suave);
+    font-size: 0.9375rem;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .loc-map-placeholder :global(svg) {
+    color: var(--dourado-escuro);
+  }
+
+  /* ---------- Doações ---------- */
+  .doacoes {
+    background: var(--areia-escura);
+  }
+
+  .doa-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .doa-inner h2 {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    margin-bottom: 0.6rem;
+  }
+
+  .doa-inner p {
+    color: var(--texto-suave);
+    max-width: 48ch;
+  }
+
+  .doa-pix {
+    margin-top: 0.8rem;
+    color: var(--texto) !important;
+  }
+
+  .doa-pix code {
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    padding: 0.15rem 0.45rem;
+    border-radius: 6px;
+    font-size: 0.9375rem;
+  }
+
+  /* ---------- Contato ---------- */
+  .contato-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .contato-item {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.25rem 1.4rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius);
+    background: var(--branco);
+    color: var(--texto);
+    transition: border-color 0.18s ease, transform 0.18s ease;
+  }
+
+  .contato-item:hover {
+    text-decoration: none;
+    border-color: var(--verde);
+    transform: translateY(-2px);
+  }
+
+  /* O Instagram é o canal que a comunidade realmente usa — sai destacado. */
+  .contato-item--destaque {
+    border-color: var(--dourado);
+    background: linear-gradient(180deg, #fffdf4, var(--branco));
+  }
+
+  .contato-item--destaque :global(svg) {
+    color: var(--dourado-escuro);
+  }
+
+  .contato-item :global(svg) {
+    color: var(--verde);
+    flex-shrink: 0;
+  }
+
+  .contato-item span {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9375rem;
+    color: var(--texto-suave);
+    word-break: break-word;
+  }
+
+  .contato-item strong {
+    color: var(--texto);
+    font-size: 0.9375rem;
+  }
+
+  /* ---------- Responsivo ---------- */
+  @media (max-width: 900px) {
+    .atalhos-grid,
+    .cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .sobre-grid,
+    .loc-grid {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .atalhos-grid,
+    .cards,
+    .contato-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

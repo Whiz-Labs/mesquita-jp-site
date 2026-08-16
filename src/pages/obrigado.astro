@@ -1,0 +1,141 @@
+---
+// Página para onde o Netlify Forms manda o visitante depois do envio
+// (`action` do formulário em Formulario.astro).
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Icon from '../components/Icon.astro';
+import { site, canalPrincipal, openingHours } from '../config';
+---
+
+<BaseLayout
+  title={`Pedido enviado — ${site.name}`}
+  description="Recebemos seu pedido. Em breve a administração do centro responde pelo contato informado."
+>
+  <Header />
+
+  <main id="conteudo" class="obrigado">
+    <div class="container obr-inner">
+      <span class="obr-check" aria-hidden="true">
+        <Icon name="check" size={34} />
+      </span>
+
+      <h1>Pedido enviado</h1>
+      <p class="obr-lead">
+        Recebemos sua mensagem. A administração do centro responde pelo contato que você
+        deixou — pode levar alguns dias, porque somos poucos.
+      </p>
+
+      <div class="obr-card">
+        <p class="ar">جَزَاكَ ٱللَّهُ خَيْرًا</p>
+        <p class="obr-trad">“Que Allah te recompense com o bem.”</p>
+      </div>
+
+      <ul class="obr-lembrete">
+        {
+          openingHours.days.map((d) => (
+            <li>
+              <Icon name="clock" size={17} />
+              <span>
+                <strong>{d.day}</strong> — {d.time}
+                {d.note && ` · ${d.note}`}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="obr-acoes">
+        <a href="/" class="btn btn-primary">Voltar ao início</a>
+        <a href={canalPrincipal.href} class="btn btn-ghost" target="_blank" rel="noopener">
+          <Icon name={canalPrincipal.icon} size={18} /> Falar no {canalPrincipal.nome}
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .obrigado {
+    padding-block: clamp(3.5rem, 10vw, 6rem);
+  }
+
+  .obr-inner {
+    max-width: 40rem;
+    text-align: center;
+  }
+
+  .obr-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    background: rgba(4, 69, 4, 0.09);
+    color: var(--verde);
+    margin-bottom: 1.5rem;
+  }
+
+  .obrigado h1 {
+    font-size: clamp(1.9rem, 5vw, 2.75rem);
+  }
+
+  .obr-lead {
+    margin-top: 0.9rem;
+    color: var(--texto-suave);
+    font-size: 1.0625rem;
+  }
+
+  .obr-card {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--branco);
+    border: 1px solid var(--borda);
+  }
+
+  .obr-card .ar {
+    font-size: 1.5rem;
+    color: var(--verde);
+  }
+
+  .obr-trad {
+    margin-top: 0.4rem;
+    font-size: 0.9375rem;
+    color: var(--texto-suave);
+  }
+
+  .obr-lembrete {
+    list-style: none;
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    text-align: left;
+  }
+
+  .obr-lembrete li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    background: var(--areia-escura);
+    font-size: 0.9375rem;
+  }
+
+  .obr-lembrete :global(svg) {
+    color: var(--dourado-escuro);
+    flex-shrink: 0;
+  }
+
+  .obr-acoes {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+</style>

@@ -1,0 +1,348 @@
+---
+import { site } from '../config';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const {
+  title,
+  description = site.description,
+  ogImage = '/og-image.png',
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Favicon / ícones — emblema do centro -->
+    <link rel="icon" href="/icon-64.png" type="image/png" sizes="64x64" />
+    <link rel="icon" href="/icon-256.png" type="image/png" sizes="256x256" />
+    <link rel="apple-touch-icon" href="/icon-256.png" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site)} />
+    <meta property="og:image:alt" content={`Emblema do ${site.name}`} />
+    <meta property="og:locale" content="pt_BR" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(ogImage, Astro.site)} />
+
+    <meta name="theme-color" content="#044504" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Fontes: Plus Jakarta Sans para o português, Amiri para o árabe -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap"
+    />
+  </head>
+  <body>
+    <a href="#conteudo" class="skip-link">Ir para o conteúdo</a>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  /* ---------- Reset ---------- */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ---------- Tokens ----------
+     Tirados do emblema do centro: o verde puro do disco (#004400), o verde
+     mais claro do anel (#175517), o dourado do Alcorão (#C69D13) e o prata
+     do monumento (#E7E7E7 / #B3B3B3). O resto do site lê só estas variáveis.
+
+     Sobre o dourado: --dourado é a cor do logo e serve para preenchimentos e
+     bordas; para TEXTO sobre fundo claro use --dourado-escuro, que é o mesmo
+     tom escurecido até passar no contraste AA. */
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-ar: 'Amiri', 'Times New Roman', serif;
+
+    --verde: #044504;
+    --verde-medio: #175517;
+    --verde-claro: #23701f;
+    --verde-escuro: #002b00;
+
+    --dourado: #c69d13;
+    --dourado-claro: #e9c64b;
+    --dourado-escuro: #8a6b08;
+
+    --prata: #b3b3b3;
+    --prata-claro: #e7e7e7;
+
+    --areia: #faf8f1;
+    --areia-escura: #f0ecdf;
+    --branco: #ffffff;
+
+    --texto: #1a2118;
+    --texto-suave: #5c665a;
+    --borda: #e4dfd0;
+
+    --max-width: 1140px;
+    --radius: 14px;
+    --radius-lg: 22px;
+    --shadow-sm: 0 1px 2px rgba(4, 69, 4, 0.06);
+    --shadow: 0 8px 24px rgba(4, 69, 4, 0.09);
+    --shadow-lg: 0 20px 50px rgba(4, 69, 4, 0.14);
+  }
+
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--texto);
+    background-color: var(--areia);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Vários elementos escondidos com [hidden] têm display:flex numa classe —
+     que vence o display:none do navegador. Sem isto, o cartão da próxima
+     oração e os avisos de "vazio" aparecem quando não deviam. */
+  [hidden] {
+    display: none !important;
+  }
+
+  a {
+    color: var(--verde);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  h1,
+  h2,
+  h3 {
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--dourado);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Texto em árabe: direção e fonte próprias, usado em trechos curtos. */
+  .ar {
+    font-family: var(--font-ar);
+    direction: rtl;
+    unicode-bidi: isolate;
+    line-height: 1.9;
+  }
+
+  .container {
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  .section {
+    padding-block: clamp(3.5rem, 8vw, 6rem);
+  }
+
+  .section-head {
+    max-width: 44rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .section-head h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    margin-bottom: 0.75rem;
+  }
+
+  .section-head p {
+    color: var(--texto-suave);
+    font-size: 1.0625rem;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dourado-escuro);
+    margin-bottom: 0.5rem;
+  }
+
+  /* Fiozinho dourado antes do eyebrow — ecoa o anel do emblema. */
+  .eyebrow::before {
+    content: '';
+    width: 1.5rem;
+    height: 2px;
+    background: var(--dourado);
+    border-radius: 2px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9875rem;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .btn:hover {
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+
+  .btn-primary {
+    background: var(--verde);
+    color: var(--branco);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-primary:hover {
+    background: var(--verde-claro);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--verde);
+    border-color: var(--borda);
+  }
+
+  .btn-ghost:hover {
+    background: var(--areia-escura);
+    border-color: var(--verde);
+  }
+
+  .btn-gold {
+    background: var(--dourado);
+    color: #241b00;
+    box-shadow: var(--shadow);
+  }
+
+  .btn-gold:hover {
+    background: var(--dourado-claro);
+  }
+
+  /* Etiqueta pequena reutilizada na agenda e nos documentos. */
+  .tag {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    background: rgba(4, 69, 4, 0.08);
+    color: var(--verde);
+  }
+
+  /* Aviso de "ainda não temos isso" — usado onde o conteúdo real vai entrar. */
+  .empty-note {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.1rem 1.25rem;
+    border: 1px dashed var(--borda);
+    border-radius: var(--radius);
+    background: var(--areia-escura);
+    color: var(--texto-suave);
+    font-size: 0.9375rem;
+  }
+
+  .empty-note svg {
+    color: var(--dourado-escuro);
+    flex-shrink: 0;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -999px;
+    top: 0;
+    z-index: 100;
+    background: var(--verde);
+    color: #fff;
+    padding: 0.65rem 1rem;
+    border-radius: 0 0 var(--radius) 0;
+  }
+
+  .skip-link:focus {
+    left: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>

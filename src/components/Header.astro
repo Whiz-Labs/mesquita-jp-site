@@ -1,0 +1,232 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { site, canalPrincipal, announcement } from '../config';
+
+const links = [
+  { href: '/#horarios', label: 'Horários' },
+  { href: '/#sobre', label: 'Sobre' },
+  { href: '/#atividades', label: 'Atividades' },
+  { href: '/#pedidos', label: 'Livros e pedidos' },
+  { href: '/#documentos', label: 'Documentos' },
+  { href: '/#localizacao', label: 'Localização' },
+  { href: '/#contato', label: 'Contato' },
+];
+---
+
+{
+  announcement.active && (
+    <div class="aviso">
+      <div class="container aviso-inner">
+        <Icon name="info" size={17} />
+        <p>
+          {announcement.text}
+          {announcement.linkHref && (
+            <a href={announcement.linkHref}>
+              {announcement.linkLabel} <Icon name="arrow" size={14} />
+            </a>
+          )}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="/" class="brand" aria-label={`${site.name} — início`}>
+      <Logo size={42} />
+      <span class="brand-text">
+        <strong>Centro Islâmico</strong>
+        <small>João Pessoa · PB</small>
+      </span>
+    </a>
+
+    <input type="checkbox" id="nav-toggle" class="visually-hidden" />
+    <label for="nav-toggle" class="nav-burger">
+      <span></span><span></span><span></span>
+      <span class="visually-hidden">Abrir menu</span>
+    </label>
+
+    <nav class="nav" aria-label="Menu principal">
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
+      <a
+        href={canalPrincipal.href}
+        class="btn btn-primary nav-cta"
+        target="_blank"
+        rel="noopener"
+      >
+        <Icon name={canalPrincipal.icon} size={16} /> Fale conosco
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  /* ---------- Faixa de aviso ---------- */
+  .aviso {
+    background: var(--verde-escuro);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.875rem;
+  }
+
+  .aviso-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding-block: 0.55rem;
+    text-align: center;
+  }
+
+  .aviso :global(svg) {
+    color: var(--dourado-claro);
+    flex-shrink: 0;
+  }
+
+  .aviso a {
+    color: var(--dourado-claro);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 0.5rem;
+    white-space: nowrap;
+  }
+
+  /* ---------- Header ---------- */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(250, 248, 241, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--borda);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 4.5rem;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--texto);
+  }
+
+  .brand:hover {
+    text-decoration: none;
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  .brand-text strong {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .brand-text small {
+    font-size: 0.75rem;
+    color: var(--texto-suave);
+    letter-spacing: 0.02em;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 1.15rem;
+  }
+
+  .nav a {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--texto-suave);
+    white-space: nowrap;
+  }
+
+  .nav a:hover {
+    color: var(--verde);
+    text-decoration: none;
+  }
+
+  .nav-cta {
+    color: var(--branco) !important;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.875rem;
+  }
+
+  .nav-burger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0.5rem;
+    cursor: pointer;
+  }
+
+  .nav-burger span:not(.visually-hidden) {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--verde);
+    border-radius: 2px;
+  }
+
+  #nav-toggle:focus-visible + .nav-burger {
+    outline: 3px solid var(--dourado);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 980px) {
+    .nav-burger {
+      display: flex;
+    }
+
+    .nav {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      background: var(--branco);
+      border-bottom: 1px solid var(--borda);
+      box-shadow: var(--shadow);
+      display: none;
+      padding: 0.5rem 1.25rem 1.25rem;
+    }
+
+    /* Menu sem JS: o checkbox escondido guarda o estado. */
+    #nav-toggle:checked ~ .nav {
+      display: flex;
+    }
+
+    .nav a {
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--borda);
+      font-size: 0.9375rem;
+    }
+
+    .nav-cta {
+      justify-content: center;
+      margin-top: 0.9rem;
+      border-bottom: 0 !important;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .aviso-inner {
+      text-align: left;
+    }
+  }
+</style>
