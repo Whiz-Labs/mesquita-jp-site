@@ -353,5 +353,5 @@ export const gallery: Photo[] = [];
 export const donations = {
   pixKey: '',
   pixOwner: '',
-  note: 'A mesquita se mantém com a sadaqa da comunidade: aluguel, água, luz e as atividades.',
+  note: 'A mesquita se mantém com a sadaqa da comunidade: manutenção, água, luz e as atividades.',
 } as const;
