@@ -8,6 +8,15 @@ import { site } from '../config';
 interface Props {
   size?: number;
   /**
+   * Tamanho CSS, para quando ele precisa variar com a tela — o hero passa um
+   * `clamp()`. Existe porque `--logo-size` sai daqui como estilo inline, e
+   * estilo inline ganha de qualquer regra de folha de estilo: tentar
+   * redimensionar o emblema pelo CSS de fora não funciona, tem de vir por
+   * aqui. `size` continua sendo dado: é ele que vai nos atributos
+   * width/height e reserva o espaço antes da imagem carregar.
+   */
+  sizeCss?: string;
+  /**
    * 'verde' sobre fundo claro; 'branco' sobre o verde escuro — nesse caso um
    * anel dourado fino separa o disco do fundo, que é quase da mesma cor.
    */
@@ -19,6 +28,7 @@ interface Props {
 
 const {
   size = 40,
+  sizeCss,
   tone = 'verde',
   decorative = true,
   class: className = '',
@@ -34,7 +44,7 @@ const {
   aria-hidden={decorative ? 'true' : undefined}
   loading="eager"
   decoding="async"
-  style={`--logo-size:${size}px`}
+  style={`--logo-size:${sizeCss ?? `${size}px`}`}
 />
 
 <style>

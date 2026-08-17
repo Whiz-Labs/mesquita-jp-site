@@ -56,18 +56,24 @@ const atalhos = [
       <div class="hero-pattern" aria-hidden="true"></div>
       <div class="container hero-inner">
         <div class="hero-emblema">
-          <Logo size={132} tone="branco" decorative={false} />
+          <Logo
+            size={132}
+            sizeCss="clamp(60px, 13vh, 150px)"
+            tone="branco"
+            decorative={false}
+          />
         </div>
 
         <p class="ar bismillah">بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>
         <h1>{site.fullName}</h1>
         <p class="hero-sub">{site.tagline}</p>
 
+        <!-- Um botão só. O de "ver horários" apontava para #horarios, exatamente
+             como o primeiro atalho logo abaixo — e o atalho ainda diz o horário
+             por extenso, o que o botão não fazia. Chegar até aqui é a única
+             ação da primeira tela que nenhum outro elemento cobre. -->
         <div class="hero-cta">
-          <a href="#horarios" class="btn btn-gold">
-            <Icon name="clock" size={18} /> Ver horários de hoje
-          </a>
-          <a href={contact.mapsLink} class="btn btn-ghost" target="_blank" rel="noopener">
+          <a href={contact.mapsLink} class="btn btn-gold" target="_blank" rel="noopener">
             <Icon name="pin" size={18} /> Como chegar
           </a>
         </div>
@@ -76,27 +82,29 @@ const atalhos = [
           Todos são bem-vindos — muçulmanos e não muçulmanos, moradores e visitantes.
         </p>
       </div>
-    </section>
 
-    <!-- ================= ATALHOS ================= -->
-    <nav class="atalhos" aria-label="Atalhos">
-      <div class="container atalhos-grid">
-        {
-          atalhos.map((a) => (
-            <a href={a.href} class="atalho">
-              <span class="atalho-icon">
-                <Icon name={a.icon} size={20} />
-              </span>
-              <span>
-                <strong>{a.label}</strong>
-                <small>{a.hint}</small>
-              </span>
-              <Icon name="arrow" size={18} class="atalho-seta" />
-            </a>
-          ))
-        }
-      </div>
-    </nav>
+      <!-- Os atalhos moram DENTRO do hero: é o que faz a primeira tela ter
+           altura exata (ver `.hero`) e o que os deixa parecendo parte do
+           verde, e não uma faixa colada embaixo. -->
+      <nav class="atalhos" aria-label="Atalhos">
+        <div class="container atalhos-grid">
+          {
+            atalhos.map((a) => (
+              <a href={a.href} class="atalho">
+                <span class="atalho-icon">
+                  <Icon name={a.icon} size={20} />
+                </span>
+                <span>
+                  <strong>{a.label}</strong>
+                  <small>{a.hint}</small>
+                </span>
+                <Icon name="arrow" size={18} class="atalho-seta" />
+              </a>
+            ))
+          }
+        </div>
+      </nav>
+    </section>
 
     <!-- ================= HORÁRIOS ================= -->
     <PrayerTimes />
@@ -343,14 +351,49 @@ const atalhos = [
     background: linear-gradient(165deg, var(--verde-medio) 0%, var(--verde-escuro) 100%);
     color: #fff;
     /*
-     * O hero inteiro tem de caber numa tela sem rolagem, inclusive num celular
-     * baixo. Por isso os espaçamentos daqui para baixo têm um termo em `vh`:
-     * numa tela curta eles encolhem sozinhos, em vez de empurrar os botões
-     * para fora da dobra. Ao acrescentar qualquer coisa ao hero, refaça a
-     * conta — o cabeçalho (aviso + nav grudada) já come ~112px.
+     * A primeira tela é uma composição só: cabeçalho + hero (com os atalhos
+     * dentro), sem rolagem e sem sobra, em qualquer altura de tela.
+     *
+     * Os atalhos estarem DENTRO do hero é o que torna a conta exata: antes a
+     * altura da faixa era um palpite em `rem` subtraído aqui, e todo erro de
+     * palpite virava um pedaço da próxima seção aparecendo na dobra. Agora só
+     * o cabeçalho é subtraído, e ele tem altura fixa.
+     *
+     * - em tela alta o hero ESTICA e o conteúdo fica centrado, com os atalhos
+     *   apoiados na base — o verde preenche a dobra inteira;
+     * - em tela baixa ele encolhe até o conteúdo, e os espaçamentos internos
+     *   (todos com um termo em `vh`) apertam junto.
+     *
+     * `min-height`, não `height`: se um dia o conteúdo crescer além da conta,
+     * ele transborda para baixo em vez de ser cortado. `svh` é a altura da
+     * tela com a barra do navegador móvel ABERTA — com `vh` o celular
+     * calcularia por cima dela e os atalhos ficariam escondidos.
      */
-    padding-block: clamp(1.5rem, 4.5vh, 3.25rem);
+    min-height: calc(100vh - var(--altura-topo));
+    min-height: calc(100svh - var(--altura-topo));
+    display: flex;
+    flex-direction: column;
+    /*
+     * O padding de baixo cai EMBAIXO da faixa de atalhos (ela está fora da
+     * área centrada), então é só a folga da faixa até a dobra. Já o de cima
+     * entra direto no respiro do conteúdo: cada pixel aqui é um pixel a mais
+     * em cima e um a menos embaixo. Ele existe, e é regulado mais abaixo em
+     * `min-height: 760px` — o respiro de cima é a margem da composição, o de
+     * baixo é o intervalo entre dois grupos, e intervalo interno maior que
+     * margem externa faz os atalhos parecerem soltos.
+     */
+    padding-top: 0;
+    padding-bottom: clamp(0.5rem, 1.5vh, 1rem);
     text-align: center;
+  }
+
+  /* Ocupa a sobra e centraliza o conteúdo nela; os atalhos ficam com a altura
+     que pedirem, encostados na base. */
+  .hero-inner {
+    position: relative; /* acima de .hero-pattern */
+    flex: 1;
+    display: grid;
+    align-content: center;
   }
 
   /* Padrão geométrico discreto, feito só com gradientes — sem imagem. */
@@ -364,9 +407,6 @@ const atalhos = [
     mask-image: radial-gradient(circle at 50% 38%, #000 8%, transparent 70%);
   }
 
-  .hero-inner {
-    position: relative;
-  }
 
   /* Halo dourado atrás do emblema — o mesmo anel que ele já tem no logo. */
   .hero-emblema {
@@ -375,10 +415,7 @@ const atalhos = [
     margin-bottom: clamp(0.75rem, 1.6vh, 1.25rem);
   }
 
-  /* Sobrepõe o `size` passado ao componente: o emblema acompanha a altura da
-     tela em vez de ficar preso aos 132px. */
   .hero-emblema :global(img) {
-    --logo-size: clamp(76px, 14vh, 120px);
     box-shadow:
       0 0 0 1px rgba(233, 198, 75, 0.45),
       0 0 0 10px rgba(233, 198, 75, 0.07),
@@ -391,10 +428,15 @@ const atalhos = [
     margin-bottom: clamp(0.6rem, 1.4vh, 1rem);
   }
 
+  /* `balance` reparte as linhas em vez de encher a primeira e deixar a sobra
+     na última — sem ele o título quebrava em "Centro Islâmico de João /
+     Pessoa", partindo o nome da cidade ao meio, e a linha de apoio terminava
+     num "da Paraíba." solitário. */
   .hero h1 {
     font-size: clamp(1.6rem, 4.6vw, 2.75rem);
-    max-width: 20ch;
+    max-width: 22ch;
     margin-inline: auto;
+    text-wrap: balance;
   }
 
   .hero-sub {
@@ -402,6 +444,7 @@ const atalhos = [
     margin: clamp(0.6rem, 1.4vh, 1rem) auto 0;
     font-size: clamp(0.95rem, 2vw, 1.1rem);
     color: rgba(255, 255, 255, 0.85);
+    text-wrap: balance;
   }
 
   .hero-cta {
@@ -428,12 +471,77 @@ const atalhos = [
     color: rgba(255, 255, 255, 0.65);
   }
 
-  /* ---------- Atalhos ---------- */
-  .atalhos {
-    background: var(--areia-escura);
-    border-bottom: 1px solid var(--borda);
+  /*
+   * Numa tela baixa quem manda nos `clamp` acima já não é o termo em `vh` — é
+   * o piso. Então aqui o piso desce também, senão um celular pequeno (~640px
+   * de altura) estoura a dobra por umas poucas dezenas de pixels e a faixa de
+   * atalhos some. Vale para celular em pé e para notebook curto.
+   */
+  /* Só onde há folga de sobra. Numa tela baixa este padding não teria espaço
+     para sair de lugar nenhum: empurraria o conteúdo para fora da dobra. */
+  @media (min-height: 760px) {
+    .hero {
+      padding-top: clamp(1.5rem, 5vh, 4.5rem);
+    }
+
+    /* Numa tela alta o bloco respira por dentro. Sem isto o ritmo interno
+       fica travado no mesmo aperto do celular e toda a altura sobrando vai
+       parar nas bordas — o conteúdo parece uma ilha pequena no meio do verde.
+       Distribuir o ar DENTRO da composição é o que a faz ocupar a tela. */
+    .hero-emblema {
+      margin-bottom: clamp(1rem, 2.5vh, 2rem);
+    }
+
+    .bismillah {
+      margin-bottom: clamp(0.9rem, 2.5vh, 1.75rem);
+    }
+
+    .hero-sub {
+      margin-top: clamp(0.9rem, 2.5vh, 1.75rem);
+    }
+
+    .hero-cta {
+      margin-top: clamp(1.5rem, 4vh, 3rem);
+    }
+
+    .hero-note {
+      margin-top: clamp(1rem, 3vh, 2.25rem);
+    }
   }
 
+  @media (max-height: 700px) {
+    /* Recupera o que o emblema maior custou aqui em cima. */
+    .atalhos-grid {
+      padding-block: 0.75rem;
+    }
+
+    .bismillah {
+      font-size: 1rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.4rem, 4.2vw, 2rem);
+    }
+
+    .hero-note {
+      margin-top: 0.5rem;
+      font-size: 0.8125rem;
+    }
+  }
+
+  /* ---------- Atalhos ---------- */
+  /* Vidro sobre o verde: fundo branco quase transparente e fio dourado, os
+     mesmos dois materiais do emblema e dos botões do hero. Nada de cartão
+     branco opaco aqui — ele recortaria a faixa do resto do bloco, que é
+     exatamente o que se queria evitar. */
+  .atalhos {
+    position: relative; /* acima de .hero-pattern */
+    flex-shrink: 0;
+  }
+
+  /* Sempre três colunas, em qualquer largura: esta faixa fecha a primeira
+     tela, e empilhar os três cartões a tornaria três vezes mais alta do que a
+     dobra comporta. O que muda no celular é a forma do cartão, não a grade. */
   .atalhos-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -447,17 +555,17 @@ const atalhos = [
     gap: 0.9rem;
     padding: 0.9rem 1.15rem;
     border-radius: var(--radius);
-    background: var(--branco);
-    border: 1px solid var(--borda);
-    color: var(--texto);
-    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(233, 198, 75, 0.28);
+    color: #fff;
+    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
   }
 
   .atalho:hover {
     text-decoration: none;
-    border-color: var(--verde);
+    background: rgba(255, 255, 255, 0.13);
+    border-color: var(--dourado-claro);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
   }
 
   .atalho-icon {
@@ -468,8 +576,8 @@ const atalhos = [
     height: 2.5rem;
     flex-shrink: 0;
     border-radius: 10px;
-    background: rgba(4, 69, 4, 0.08);
-    color: var(--verde);
+    background: rgba(233, 198, 75, 0.14);
+    color: var(--dourado-claro);
   }
 
   .atalho span:not(.atalho-icon) {
@@ -484,12 +592,12 @@ const atalhos = [
 
   .atalho small {
     font-size: 0.8125rem;
-    color: var(--texto-suave);
+    color: rgba(255, 255, 255, 0.7);
   }
 
   .atalho :global(.atalho-seta) {
     margin-left: auto;
-    color: var(--dourado-escuro);
+    color: var(--dourado-claro);
     flex-shrink: 0;
   }
 
@@ -783,9 +891,38 @@ const atalhos = [
 
   /* ---------- Responsivo ---------- */
   @media (max-width: 900px) {
-    .atalhos-grid,
     .cards {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Cartão vertical e sem a linha de apoio: o ícone e o rótulo bastam para
+       reconhecer o atalho, e a faixa inteira cabe em ~8rem. */
+    .atalhos-grid {
+      gap: 0.5rem;
+      padding-block: 0.85rem;
+    }
+
+    .atalho {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 0.4rem;
+      padding: 0.7rem 0.5rem;
+    }
+
+    .atalho small,
+    .atalho :global(.atalho-seta) {
+      display: none;
+    }
+
+    .atalho-icon {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .atalho strong {
+      font-size: 0.8125rem;
     }
 
     .sobre-grid,
@@ -796,10 +933,14 @@ const atalhos = [
   }
 
   @media (max-width: 620px) {
-    .atalhos-grid,
     .cards,
     .contato-grid {
       grid-template-columns: 1fr;
+    }
+
+    .atalho strong {
+      font-size: 0.75rem;
+      line-height: 1.25;
     }
   }
 </style>

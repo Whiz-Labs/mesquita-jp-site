@@ -3,12 +3,14 @@ import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import { site, canalPrincipal, announcement } from '../config';
 
+// Horários, pedidos e documentos NÃO estão aqui de propósito: a faixa de
+// atalhos logo abaixo do hero já leva aos três, e ela aparece junto com o menu
+// na primeira tela. Repetir os mesmos destinos a dois centímetros de distância
+// só engorda a barra. O rodapé continua com a lista completa, que é onde se
+// procura navegação exaustiva.
 const links = [
-  { href: '/#horarios', label: 'Horários' },
   { href: '/#sobre', label: 'Sobre' },
   { href: '/#atividades', label: 'Atividades' },
-  { href: '/#pedidos', label: 'Livros e pedidos' },
-  { href: '/#documentos', label: 'Documentos' },
   { href: '/#localizacao', label: 'Localização' },
   { href: '/#contato', label: 'Contato' },
 ];
