@@ -1,0 +1,491 @@
+---
+/**
+ * Prestação de contas — para onde vai o dinheiro doado.
+ *
+ * Os números são lidos no build, do painel da tesouraria
+ * (`admin.centroislamicojp.org.br`), e ficam gravados no HTML. O site não fala
+ * com o banco quando alguém visita: assim a seção não depende de nada estar de
+ * pé no momento da leitura.
+ *
+ * Só entra aqui o que a tesouraria publicou. Rascunho não sai do painel, e o
+ * RLS garante isso do lado do banco — não é confiança, é regra.
+ *
+ * Comprovante só existe em despesa. Recibo de PIX de doação traz nome e CPF de
+ * quem doou, e isso não se publica; o que responde "para onde foi o dinheiro" é
+ * a nota da despesa.
+ */
+import Icon from './Icon.astro';
+import { canalPrincipal } from '../config';
+import {
+  dataDaLeitura,
+  diaEMes,
+  formatarCentavos,
+  lerTransparencia,
+  nomeDoMes,
+} from '../lib/transparencia';
+
+const dados = await lerTransparencia();
+
+/** Os três meses mais recentes vêm detalhados; o resto fica na tabela. */
+const MESES_DETALHADOS = 3;
+const detalhados = dados.meses.slice(0, MESES_DETALHADOS);
+const anteriores = dados.meses.slice(MESES_DETALHADOS);
+
+const porMes = new Map<string, typeof dados.lancamentos>();
+for (const l of dados.lancamentos) {
+  porMes.set(l.competencia, [...(porMes.get(l.competencia) ?? []), l]);
+}
+
+const bucket = `${import.meta.env.SUPABASE_URL}/storage/v1/object/public/comprovantes`;
+const temNumeros = dados.meses.length > 0;
+---
+
+<section id="transparencia" class="section transp">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Prestação de contas</span>
+      <h2>Para onde vai o que você doa</h2>
+      <p>
+        Toda despesa da mesquita é lançada com nota anexada, e cada mês é publicado
+        fechado. O que está aqui é o que foi conferido — nada é estimado.
+      </p>
+    </div>
+
+    {
+      !temNumeros ? (
+        <div class="vazio">
+          <p>
+            <strong>Em breve.</strong> A prestação de contas mensal começa a ser publicada
+            assim que o primeiro mês for fechado. Enquanto isso, qualquer dúvida sobre
+            doações pode ser feita direto pelo {canalPrincipal.nome}.
+          </p>
+          <a href={canalPrincipal.href} class="btn btn-secondary" target="_blank" rel="noopener">
+            <Icon name={canalPrincipal.icon} size={18} /> {canalPrincipal.acao}
+          </a>
+        </div>
+      ) : (
+        <>
+          {detalhados.map((mes) => {
+            const linhas = porMes.get(mes.competencia) ?? [];
+            return (
+              <article class="mes">
+                <header class="mes-topo">
+                  <h3>{nomeDoMes(mes.competencia)}</h3>
+                  <dl class="numeros">
+                    <div>
+                      <dt>Entrou</dt>
+                      <dd class="entrada">{formatarCentavos(mes.entradas_centavos)}</dd>
+                    </div>
+                    <div>
+                      <dt>Saiu</dt>
+                      <dd class="saida">{formatarCentavos(mes.saidas_centavos)}</dd>
+                    </div>
+                    <div>
+                      <dt>Saldo</dt>
+                      <dd>{formatarCentavos(mes.saldo_centavos)}</dd>
+                    </div>
+                  </dl>
+                </header>
+
+                {linhas.length > 0 && (
+                  <ul class="linhas">
+                    {linhas.map((l) => (
+                      <li class:list={[{ superado: dados.retificados.has(l.id) }]}>
+                        <span class="dia">{diaEMes(l.data)}</span>
+                        <span class="desc">
+                          {l.descricao}
+                          {dados.retificados.has(l.id) && (
+                            <span class="marca">corrigido depois</span>
+                          )}
+                        </span>
+                        {l.comprovante_path ? (
+                          <a
+                            class="nota"
+                            href={`${bucket}/${l.comprovante_path}`}
+                            target="_blank"
+                            rel="noopener"
+                            title={`SHA-256 ${l.comprovante_sha256}`}
+                          >
+                            nota
+                          </a>
+                        ) : (
+                          <span class="nota vaga" />
+                        )}
+                        <span class:list={['valor', l.tipo]}>
+                          {l.tipo === 'entrada' ? '+' : '−'}
+                          {formatarCentavos(l.valor_centavos)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            );
+          })}
+
+          {anteriores.length > 0 && (
+            <details class="antigos">
+              <summary>Meses anteriores ({anteriores.length})</summary>
+              <div class="rolagem">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Mês</th>
+                      <th>Entrou</th>
+                      <th>Saiu</th>
+                      <th>Saldo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {anteriores.map((m) => (
+                      <tr>
+                        <td>{nomeDoMes(m.competencia)}</td>
+                        <td class="entrada">{formatarCentavos(m.entradas_centavos)}</td>
+                        <td class="saida">{formatarCentavos(m.saidas_centavos)}</td>
+                        <td>{formatarCentavos(m.saldo_centavos)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          )}
+
+          <p class="rodape">
+            Números publicados até {dataDaLeitura()}. Cada nota anexada guarda uma
+            impressão digital (SHA-256), publicada junto — assim o arquivo não pode ser
+            trocado depois sem que se perceba.
+          </p>
+        </>
+      )
+    }
+
+    {
+      dados.necessidades.length > 0 && (
+        <div class="necessidades">
+          <h3>O que a comunidade precisa agora</h3>
+          <div class="cards">
+            {dados.necessidades.map((n) => {
+              const pct = n.meta_centavos
+                ? Math.min(100, Math.round((n.arrecadado_centavos / n.meta_centavos) * 100))
+                : null;
+              return (
+                <article class="nec">
+                  <h4>{n.titulo}</h4>
+                  {n.descricao && <p>{n.descricao}</p>}
+                  {pct !== null ? (
+                    <>
+                      <div class="barra">
+                        <i style={`width:${pct}%`} />
+                      </div>
+                      <p class="nec-num">
+                        <strong>{formatarCentavos(n.arrecadado_centavos)}</strong> de{' '}
+                        {formatarCentavos(n.meta_centavos ?? 0)}
+                      </p>
+                    </>
+                  ) : (
+                    <p class="nec-num">
+                      <strong>{formatarCentavos(n.arrecadado_centavos)}</strong> arrecadados
+                    </p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+          <a href={canalPrincipal.href} class="btn btn-primary" target="_blank" rel="noopener">
+            <Icon name="heart" size={18} /> Ajudar com uma delas
+          </a>
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .transp {
+    background: var(--areia-escura);
+  }
+
+  .vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 1.25rem;
+    max-width: 42rem;
+  }
+
+  .vazio p {
+    margin: 0;
+    color: var(--texto-suave);
+  }
+
+  .mes {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 18px;
+  }
+
+  .mes-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--borda);
+  }
+
+  .mes-topo h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--verde);
+  }
+
+  .mes-topo h3::first-letter {
+    text-transform: uppercase;
+  }
+
+  .numeros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  dt {
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .entrada {
+    color: var(--verde-claro);
+  }
+
+  .saida {
+    color: #8c1c13;
+  }
+
+  .linhas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .linhas li {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr auto auto;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--prata-claro);
+    font-size: 0.95rem;
+  }
+
+  .linhas li:last-child {
+    border-bottom: 0;
+  }
+
+  .dia {
+    font-size: 0.85rem;
+    color: var(--texto-suave);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .marca {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    background: #f3e6e5;
+    color: #8c1c13;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  li.superado .desc,
+  li.superado .valor {
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+
+  .nota {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--verde);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .nota.vaga {
+    text-decoration: none;
+  }
+
+  .valor {
+    font-weight: 700;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .antigos summary {
+    cursor: pointer;
+    padding: 0.75rem 0;
+    color: var(--texto-suave);
+    font-size: 0.95rem;
+  }
+
+  .rolagem {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--branco);
+    border-radius: 14px;
+    overflow: hidden;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th,
+  td {
+    padding: 0.7rem 1rem;
+    text-align: right;
+    border-bottom: 1px solid var(--borda);
+    font-size: 0.9rem;
+  }
+
+  th:first-child,
+  td:first-child {
+    text-align: left;
+    text-transform: capitalize;
+  }
+
+  th {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .rodape {
+    margin: 1.25rem 0 0;
+    font-size: 0.875rem;
+    color: var(--texto-suave);
+    max-width: 44rem;
+  }
+
+  .necessidades {
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 1.25rem;
+  }
+
+  .necessidades h3 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .nec {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.25rem;
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 16px;
+  }
+
+  .nec h4 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+
+  .nec p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--texto-suave);
+  }
+
+  .barra {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--areia-escura);
+    overflow: hidden;
+  }
+
+  .barra i {
+    display: block;
+    height: 100%;
+    background: var(--verde-claro);
+  }
+
+  .nec-num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nec-num strong {
+    color: var(--texto);
+  }
+
+  @media (max-width: 40rem) {
+    .mes {
+      padding: 1.1rem;
+    }
+
+    .numeros {
+      gap: 1rem;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .linhas li {
+      grid-template-columns: 3rem 1fr auto;
+      row-gap: 0.15rem;
+    }
+
+    .dia {
+      grid-area: 1 / 1 / 3 / 2;
+    }
+
+    .desc {
+      grid-area: 1 / 2 / 2 / 3;
+    }
+
+    .valor {
+      grid-area: 1 / 3 / 2 / 4;
+    }
+
+    .nota {
+      grid-area: 2 / 2 / 3 / 4;
+      justify-self: start;
+    }
+
+    .nota.vaga {
+      display: none;
+    }
+  }
+</style>
