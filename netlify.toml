@@ -3,7 +3,7 @@
   publish = "dist"
 
 [[redirects]]
-  from = "https://www.mesquitajp.com.br/*"
-  to = "https://mesquitajp.com.br/:splat"
+  from = "https://www.centroislamicojp.org.br/*"
+  to = "https://centroislamicojp.org.br/:splat"
   status = 301
   force = true
