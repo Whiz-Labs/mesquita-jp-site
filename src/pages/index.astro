@@ -6,7 +6,6 @@ import PrayerTimes from '../components/PrayerTimes.astro';
 import Formulario from '../components/Formulario.astro';
 import Documentos from '../components/Documentos.astro';
 import Galeria from '../components/Galeria.astro';
-import Transparencia from '../components/Transparencia.astro';
 import Icon from '../components/Icon.astro';
 import Logo from '../components/Logo.astro';
 import {
@@ -62,7 +61,6 @@ const atalhos = [
 
         <p class="ar bismillah">بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>
         <h1>{site.fullName}</h1>
-        <p class="hero-ar ar">{site.nameAr}</p>
         <p class="hero-sub">{site.tagline}</p>
 
         <div class="hero-cta">
@@ -271,9 +269,6 @@ const atalhos = [
       </div>
     </section>
 
-    <!-- ================= TRANSPARÊNCIA ================= -->
-    <Transparencia />
-
     <!-- ================= CONTATO ================= -->
     <section id="contato" class="section">
       <div class="container">
@@ -347,7 +342,14 @@ const atalhos = [
     overflow: hidden;
     background: linear-gradient(165deg, var(--verde-medio) 0%, var(--verde-escuro) 100%);
     color: #fff;
-    padding-block: clamp(3rem, 8vw, 5.5rem);
+    /*
+     * O hero inteiro tem de caber numa tela sem rolagem, inclusive num celular
+     * baixo. Por isso os espaçamentos daqui para baixo têm um termo em `vh`:
+     * numa tela curta eles encolhem sozinhos, em vez de empurrar os botões
+     * para fora da dobra. Ao acrescentar qualquer coisa ao hero, refaça a
+     * conta — o cabeçalho (aviso + nav grudada) já come ~112px.
+     */
+    padding-block: clamp(1.5rem, 4.5vh, 3.25rem);
     text-align: center;
   }
 
@@ -370,10 +372,13 @@ const atalhos = [
   .hero-emblema {
     display: flex;
     justify-content: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: clamp(0.75rem, 1.6vh, 1.25rem);
   }
 
+  /* Sobrepõe o `size` passado ao componente: o emblema acompanha a altura da
+     tela em vez de ficar preso aos 132px. */
   .hero-emblema :global(img) {
+    --logo-size: clamp(76px, 14vh, 120px);
     box-shadow:
       0 0 0 1px rgba(233, 198, 75, 0.45),
       0 0 0 10px rgba(233, 198, 75, 0.07),
@@ -381,27 +386,21 @@ const atalhos = [
   }
 
   .bismillah {
-    font-size: clamp(1.25rem, 3.2vw, 1.75rem);
+    font-size: clamp(1.1rem, 2.8vw, 1.5rem);
     color: var(--dourado-claro);
-    margin-bottom: 1.25rem;
+    margin-bottom: clamp(0.6rem, 1.4vh, 1rem);
   }
 
   .hero h1 {
-    font-size: clamp(2rem, 5.5vw, 3.4rem);
+    font-size: clamp(1.6rem, 4.6vw, 2.75rem);
     max-width: 20ch;
     margin-inline: auto;
   }
 
-  .hero-ar {
-    font-size: clamp(1.2rem, 3vw, 1.6rem);
-    color: rgba(255, 255, 255, 0.78);
-    margin-top: 0.75rem;
-  }
-
   .hero-sub {
     max-width: 46ch;
-    margin: 1.1rem auto 0;
-    font-size: clamp(1rem, 2.2vw, 1.15rem);
+    margin: clamp(0.6rem, 1.4vh, 1rem) auto 0;
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
     color: rgba(255, 255, 255, 0.85);
   }
 
@@ -410,7 +409,7 @@ const atalhos = [
     justify-content: center;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 2rem;
+    margin-top: clamp(1rem, 2.2vh, 1.75rem);
   }
 
   .hero .btn-ghost {
@@ -424,7 +423,7 @@ const atalhos = [
   }
 
   .hero-note {
-    margin-top: 1.4rem;
+    margin-top: clamp(0.8rem, 1.6vh, 1.25rem);
     font-size: 0.875rem;
     color: rgba(255, 255, 255, 0.65);
   }

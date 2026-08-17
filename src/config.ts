@@ -10,7 +10,11 @@ export const site = {
   name: 'Centro Islâmico de João Pessoa',
   /** Nome completo/oficial, usado no hero e em textos formais. */
   fullName: 'Centro Islâmico de João Pessoa',
-  /** Nome em árabe (aparece no hero, em fonte Amiri). */
+  /**
+   * Nome em árabe. Não é exibido no site — saiu do hero para que a seção
+   * inteira coubesse numa tela. Fica aqui para uso formal (impressos, redes).
+   * Se voltar a ser exibido, precisa de `class="ar"`.
+   */
   nameAr: 'المركز الإسلامي في جواو بيسوا',
   tagline: 'Uma casa de oração e de acolhimento para a comunidade muçulmana da Paraíba.',
   description:
