@@ -53,11 +53,11 @@ const temNumeros = dados.meses.length > 0;
 <section id="transparencia" class="section transp">
   <div class="container">
     <div class="section-head">
-      <span class="eyebrow">Prestação de contas</span>
-      <h2>Para onde vai o que você doa</h2>
+      <span class="eyebrow">Centro Islâmico de João Pessoa</span>
+      <h2>Prestação de contas</h2>
       <p>
-        Toda despesa da mesquita é lançada com nota anexada, e cada mês é publicado
-        fechado. O que está aqui é o que foi conferido — nada é estimado.
+        Entradas, despesas e a nota de cada gasto, mês a mês. Só entra aqui o que a
+        tesouraria já conferiu e publicou — nada é estimado.
       </p>
     </div>
 
@@ -212,8 +212,28 @@ const temNumeros = dados.meses.length > 0;
 </section>
 
 <style>
+  /*
+    Esta seção vive numa página própria, e não como bloco de uma landing: o topo
+    é dimensionado como cabeçalho de documento, não como chamada. Daí sobrescrever
+    o `.section` e o `.section-head` do BaseLayout, que são generosos de
+    propósito lá — aqui a primeira linha de número tem de aparecer sem rolar.
+  */
   .transp {
     background: var(--areia-escura);
+    padding-block: 2.25rem 4rem;
+  }
+
+  .section-head {
+    margin-bottom: 1.5rem;
+  }
+
+  .section-head h2 {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    margin-bottom: 0.4rem;
+  }
+
+  .section-head p {
+    font-size: 0.975rem;
   }
 
   .vazio {
