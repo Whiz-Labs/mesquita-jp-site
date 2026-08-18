@@ -91,6 +91,12 @@ const navLinks = [
 
   <div class="container footer-bottom">
     <span>© {year} {site.name}</span>
+    {/*
+      Acesso da tesouraria. Fica no rodapé, discreto, porque quem precisa dele
+      já sabe que existe — e quem não precisa não tem o que fazer lá. A porta é
+      o login da Supabase, e o cadastro público está desligado.
+    */}
+    <a class="footer-admin" href="https://admin.centroislamicojp.org.br">Área restrita</a>
     <span class="ar">وَأَنَّ ٱلْمَسَٰجِدَ لِلَّهِ</span>
   </div>
 </footer>
@@ -170,6 +176,16 @@ const navLinks = [
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     font-size: 0.875rem;
     color: rgba(255, 255, 255, 0.6);
+  }
+
+  .footer-admin {
+    color: rgba(255, 255, 255, 0.55);
+    text-decoration: none;
+  }
+
+  .footer-admin:hover {
+    color: var(--dourado-claro);
+    text-decoration: underline;
   }
 
   .footer-bottom .ar {
