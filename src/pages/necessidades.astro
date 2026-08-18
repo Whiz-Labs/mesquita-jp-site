@@ -1,0 +1,26 @@
+---
+/**
+ * O que a comunidade precisa, em página própria.
+ *
+ * Como a prestação de contas: fora do menu, fora da home, compartilhada por
+ * link — com quem pergunta, com quem doa, com a própria comunidade.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Necessidades from '../components/Necessidades.astro';
+import { site } from '../config';
+---
+
+<BaseLayout
+  title={`O que a comunidade precisa — ${site.name}`}
+  description="A lista do que o Centro Islâmico de João Pessoa precisa comprar ou consertar, mantida pela tesouraria."
+>
+  <Header />
+
+  <main id="conteudo">
+    <Necessidades />
+  </main>
+
+  <Footer />
+</BaseLayout>

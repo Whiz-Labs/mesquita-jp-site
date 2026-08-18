@@ -1,0 +1,169 @@
+---
+/**
+ * O que a comunidade precisa comprar ou consertar.
+ *
+ * Página separada da prestação de contas de propósito: são duas conversas
+ * diferentes. As contas dizem "isto foi feito com o que você deu"; as
+ * necessidades dizem "isto ainda falta". Juntas numa página só, uma delas
+ * sempre vira rodapé da outra.
+ *
+ * Só aparece o que a tesouraria marcou como "no site" — quem filtra é o RLS,
+ * não este código.
+ */
+import Icon from './Icon.astro';
+import { canalPrincipal } from '../config';
+import { formatarCentavos, lerNecessidades } from '../lib/transparencia';
+
+const necessidades = await lerNecessidades();
+---
+
+<section id="necessidades" class="nec-sec">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Centro Islâmico de João Pessoa</span>
+      <h2>O que a comunidade precisa</h2>
+      <p>
+        A lista é mantida pela tesouraria e vale para hoje. Quando uma delas é concluída,
+        sai daqui.
+      </p>
+    </div>
+
+    {
+      necessidades.length === 0 ? (
+        <div class="vazio">
+          <p>
+            <strong>Nada na lista agora.</strong> Quando houver algo que a comunidade precise
+            comprar ou consertar, aparece aqui. Para ajudar de outra forma, fale com a
+            administração pelo {canalPrincipal.nome}.
+          </p>
+          <a href={canalPrincipal.href} class="btn btn-secondary" target="_blank" rel="noopener">
+            <Icon name={canalPrincipal.icon} size={18} /> {canalPrincipal.acao}
+          </a>
+        </div>
+      ) : (
+        <>
+          <div class="cards">
+            {necessidades.map((n) => {
+              const pct = n.meta_centavos
+                ? Math.min(100, Math.round((n.arrecadado_centavos / n.meta_centavos) * 100))
+                : null;
+              return (
+                <article class="nec">
+                  <h3>{n.titulo}</h3>
+                  {n.descricao && <p class="desc">{n.descricao}</p>}
+                  {pct !== null ? (
+                    <>
+                      <div class="barra">
+                        <i style={`width:${pct}%`} />
+                      </div>
+                      <p class="num">
+                        <strong>{formatarCentavos(n.arrecadado_centavos)}</strong> de{' '}
+                        {formatarCentavos(n.meta_centavos ?? 0)}
+                      </p>
+                    </>
+                  ) : (
+                    <p class="num">
+                      <strong>{formatarCentavos(n.arrecadado_centavos)}</strong> arrecadados
+                    </p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+
+          <a href={canalPrincipal.href} class="btn btn-primary" target="_blank" rel="noopener">
+            <Icon name="heart" size={18} /> Quero ajudar
+          </a>
+        </>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  /* Mesmo dimensionamento da página de contas: isto é documento, não chamada. */
+  .nec-sec {
+    background: var(--areia-escura);
+    padding-block: 2.25rem 4rem;
+    min-height: 60vh;
+  }
+
+  .section-head {
+    margin-bottom: 1.5rem;
+  }
+
+  .section-head h2 {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    margin-bottom: 0.4rem;
+  }
+
+  .section-head p {
+    font-size: 0.975rem;
+  }
+
+  .vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 1.25rem;
+    max-width: 42rem;
+  }
+
+  .vazio p {
+    margin: 0;
+    color: var(--texto-suave);
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .nec {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.25rem;
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: 16px;
+  }
+
+  .nec h3 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+
+  .desc {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--texto-suave);
+  }
+
+  .barra {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--areia-escura);
+    overflow: hidden;
+  }
+
+  .barra i {
+    display: block;
+    height: 100%;
+    background: var(--verde-claro);
+  }
+
+  .num {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+    color: var(--texto-suave);
+  }
+
+  .num strong {
+    color: var(--texto);
+    font-size: 1rem;
+  }
+</style>

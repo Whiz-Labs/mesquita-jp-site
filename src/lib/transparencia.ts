@@ -49,20 +49,18 @@ export interface Necessidade {
   prioridade: number;
 }
 
-export interface DadosTransparencia {
+export interface DadosContas {
   meses: ResumoMes[];
   lancamentos: Lancamento[];
-  necessidades: Necessidade[];
   /** Ids que foram substituídos por uma retificação publicada. */
   retificados: Set<string>;
-  /** `false` quando não deu para falar com a Supabase — a seção avisa. */
+  /** `false` quando não deu para falar com a Supabase — a página avisa. */
   disponivel: boolean;
 }
 
-const VAZIO: DadosTransparencia = {
+const CONTAS_VAZIAS: DadosContas = {
   meses: [],
   lancamentos: [],
-  necessidades: [],
   retificados: new Set(),
   disponivel: false,
 };
@@ -91,33 +89,33 @@ async function buscar<T>(recurso: string): Promise<T[] | null> {
   }
 }
 
-export async function lerTransparencia(): Promise<DadosTransparencia> {
-  if (!URL_BASE || !CHAVE) {
-    console.warn(
-      '[transparência] SUPABASE_URL ou PUBLIC_SUPABASE_ANON_KEY não definidas. ' +
-        'A seção vai sair vazia. Ver .env.example.'
-    );
-    return VAZIO;
-  }
+function semChaves(quem: string): boolean {
+  if (URL_BASE && CHAVE) return false;
+  console.warn(
+    `[${quem}] SUPABASE_URL ou PUBLIC_SUPABASE_ANON_KEY não definidas. ` +
+      'A página vai sair vazia. Ver .env.example.'
+  );
+  return true;
+}
 
-  const [meses, lancamentos, necessidades] = await Promise.all([
+/** Os números das contas. Não busca necessidades: são outra página. */
+export async function lerContas(): Promise<DadosContas> {
+  if (semChaves('contas')) return CONTAS_VAZIAS;
+
+  const [meses, lancamentos] = await Promise.all([
     buscar<ResumoMes>('resumo_mensal?select=*&order=competencia.desc&limit=24'),
     buscar<Lancamento>(
       'lancamentos?select=id,tipo,data,competencia,categoria,descricao,valor_centavos,comprovante_path,comprovante_sha256,retifica&order=competencia.desc,data.desc'
     ),
-    buscar<Necessidade>(
-      'necessidades?select=id,titulo,descricao,meta_centavos,arrecadado_centavos,prioridade&order=prioridade.desc'
-    ),
   ]);
 
-  if (!meses && !lancamentos && !necessidades) return VAZIO;
+  if (!meses && !lancamentos) return CONTAS_VAZIAS;
 
   const linhas = lancamentos ?? [];
 
   return {
     meses: meses ?? [],
     lancamentos: linhas,
-    necessidades: necessidades ?? [],
     // Um lançamento que tem correção publicada apontando para ele sai da soma
     // (a view já faz isso), mas continua na lista — riscado. O livro guarda o
     // próprio erro; é isso que torna o resto confiável.
@@ -126,6 +124,19 @@ export async function lerTransparencia(): Promise<DadosTransparencia> {
     ),
     disponivel: true,
   };
+}
+
+/**
+ * O que a comunidade precisa agora. Só vem o que a tesouraria marcou como "no
+ * site" — o RLS filtra por `ativo`, então nada aqui é decisão deste código.
+ */
+export async function lerNecessidades(): Promise<Necessidade[]> {
+  if (semChaves('necessidades')) return [];
+  return (
+    (await buscar<Necessidade>(
+      'necessidades?select=id,titulo,descricao,meta_centavos,arrecadado_centavos,prioridade&order=prioridade.desc'
+    )) ?? []
+  );
 }
 
 /** `123456` → `R$ 1.234,56`. Inteiro do começo ao fim, sem ponto flutuante. */

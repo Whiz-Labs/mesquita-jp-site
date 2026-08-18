@@ -30,11 +30,11 @@ import {
   dataDaLeitura,
   diaEMes,
   formatarCentavos,
-  lerTransparencia,
+  lerContas,
   nomeDoMes,
 } from '../lib/transparencia';
 
-const dados = await lerTransparencia();
+const dados = await lerContas();
 
 /** Os três meses mais recentes vêm detalhados; o resto fica na tabela. */
 const MESES_DETALHADOS = 3;
@@ -170,44 +170,6 @@ const temNumeros = dados.meses.length > 0;
       )
     }
 
-    {
-      dados.necessidades.length > 0 && (
-        <div class="necessidades">
-          <h3>O que a comunidade precisa agora</h3>
-          <div class="cards">
-            {dados.necessidades.map((n) => {
-              const pct = n.meta_centavos
-                ? Math.min(100, Math.round((n.arrecadado_centavos / n.meta_centavos) * 100))
-                : null;
-              return (
-                <article class="nec">
-                  <h4>{n.titulo}</h4>
-                  {n.descricao && <p>{n.descricao}</p>}
-                  {pct !== null ? (
-                    <>
-                      <div class="barra">
-                        <i style={`width:${pct}%`} />
-                      </div>
-                      <p class="nec-num">
-                        <strong>{formatarCentavos(n.arrecadado_centavos)}</strong> de{' '}
-                        {formatarCentavos(n.meta_centavos ?? 0)}
-                      </p>
-                    </>
-                  ) : (
-                    <p class="nec-num">
-                      <strong>{formatarCentavos(n.arrecadado_centavos)}</strong> arrecadados
-                    </p>
-                  )}
-                </article>
-              );
-            })}
-          </div>
-          <a href={canalPrincipal.href} class="btn btn-primary" target="_blank" rel="noopener">
-            <Icon name="heart" size={18} /> Ajudar com uma delas
-          </a>
-        </div>
-      )
-    }
   </div>
 </section>
 
@@ -419,67 +381,15 @@ const temNumeros = dados.meses.length > 0;
     max-width: 44rem;
   }
 
-  .necessidades {
-    margin-top: 3rem;
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    gap: 1.25rem;
-  }
 
-  .necessidades h3 {
-    margin: 0;
-    font-size: 1.35rem;
-  }
 
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: 1rem;
-    width: 100%;
-  }
 
-  .nec {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 1.25rem;
-    background: var(--branco);
-    border: 1px solid var(--borda);
-    border-radius: 16px;
-  }
 
-  .nec h4 {
-    margin: 0;
-    font-size: 1.05rem;
-  }
 
-  .nec p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--texto-suave);
-  }
 
-  .barra {
-    height: 8px;
-    border-radius: 999px;
-    background: var(--areia-escura);
-    overflow: hidden;
-  }
 
-  .barra i {
-    display: block;
-    height: 100%;
-    background: var(--verde-claro);
-  }
 
-  .nec-num {
-    font-variant-numeric: tabular-nums;
-  }
 
-  .nec-num strong {
-    color: var(--texto);
-  }
 
   @media (max-width: 40rem) {
     .mes {
