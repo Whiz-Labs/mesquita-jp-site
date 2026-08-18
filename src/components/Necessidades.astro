@@ -115,8 +115,11 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
                         </>
                       ) : (
                         <>
+                          {/* Sem meta não há barra, e um valor solto deixa quem
+                              lê perguntando "de quanto?". A frase diz por que
+                              não há de quanto: o custo ainda não foi levantado. */}
                           <strong>{formatarCentavos(n.arrecadado_centavos)}</strong>
-                          <span class="por">arrecadados</span>
+                          <span class="por">arrecadados · custo ainda não levantado</span>
                         </>
                       )}
                     </p>
