@@ -216,7 +216,8 @@ export const activities = [
 /**
  * Envio de livros islâmicos — hoje o principal serviço do centro.
  *
- * Os livros são enviados sem custo para quem mora no Nordeste. A lista de
+ * Os livros são enviados para quem mora no Nordeste, conforme a disponibilidade.
+ * A lista de
  * estados existe para o formulário: pedir de fora dela é o único caso que a
  * gente não consegue atender.
  */
@@ -235,7 +236,7 @@ export const books = {
     'Sergipe',
   ],
   note:
-    'O envio é gratuito. Pedimos só o endereço completo para conseguir postar — nada além disso.',
+    'O envio sai conforme a disponibilidade dos livros. Pedimos só o endereço completo para conseguir postar — nada além disso.',
 } as const;
 
 /**
@@ -259,7 +260,7 @@ export const requestForm = {
       id: 'livros',
       value: 'Pedido de livros islâmicos',
       label: 'Quero receber livros islâmicos',
-      hint: 'Envio gratuito para o Nordeste',
+      hint: 'Envio para o Nordeste',
       icon: 'book',
     },
     {

@@ -21,10 +21,9 @@ const { name: formName, successPage, types } = requestForm;
       <span class="eyebrow">Livros e pedidos</span>
       <h2>Peça livros islâmicos ou marque uma visita</h2>
       <p>
-        Enviamos livros sobre o Islam, <strong>sem custo</strong>, para quem mora no {
-          books.regionLabel
-        }. O mesmo formulário serve para agendar uma visita à mesquita ou tratar de
-        qualquer outro assunto com a administração.
+        Enviamos livros sobre o Islam para quem mora no {books.regionLabel}, conforme a
+        disponibilidade. O mesmo formulário serve para agendar uma visita à mesquita ou
+        tratar de qualquer outro assunto com a administração.
       </p>
     </div>
 
@@ -34,7 +33,7 @@ const { name: formName, successPage, types } = requestForm;
         <ol>
           <li>Você escolhe “{types[0].label}” e preenche o endereço.</li>
           <li>A gente confere o pedido e responde pelo contato que você deixar.</li>
-          <li>Os livros são postados para o seu endereço.</li>
+          <li>Havendo o livro em estoque, ele é postado para o seu endereço.</li>
         </ol>
         <p class="ped-note">{books.note}</p>
 
@@ -81,6 +80,18 @@ const { name: formName, successPage, types } = requestForm;
           ))
         }
 
+        {/*
+          Como recebe. Mesma mecânica dos radios de assunto: filhos diretos do
+          <form>, e os campos de endereço aparecem só no correio. O padrão é o
+          correio porque é para isso que este formulário existe — quem mora
+          longe. A retirada está aqui para que quem é de João Pessoa não gere
+          uma postagem que não precisava existir.
+        */}
+        <input class="entrega-radio visually-hidden" type="radio" name="entrega" id="entrega-correio"
+               value="Receber pelo correio" checked />
+        <input class="entrega-radio visually-hidden" type="radio" name="entrega" id="entrega-retirar"
+               value="Retirar na mesquita" />
+
         <div class="tipo-grid">
           {
             types.map((t) => (
@@ -114,7 +125,30 @@ const { name: formName, successPage, types } = requestForm;
           </div>
 
           <!-- Só para o pedido de livros -->
-          <div class="so-livros campo">
+          <div class="so-livros campo campo--largo entrega-escolha">
+            <span class="rotulo-grupo">Como prefere receber</span>
+            <div class="entrega-opcoes">
+              <label for="entrega-correio">Pelo correio</label>
+              <label for="entrega-retirar">Retirar na mesquita</label>
+            </div>
+            <small>Se você é de João Pessoa, retirar é mais rápido — e a gente se conhece.</small>
+          </div>
+
+          {/* Uma linha, e nada de dado pessoal a mais. Não é um teste: é o que
+              nos ajuda a escolher o livro certo, e de quebra separa o pedido
+              pensado do clique distraído. */}
+          <div class="so-livros campo campo--largo">
+            <label for="f-motivo">Por que quer o livro?</label>
+            <input
+              type="text"
+              id="f-motivo"
+              name="motivo"
+              maxlength="200"
+              placeholder="uma linha basta — ajuda a escolher o que enviar"
+            />
+          </div>
+
+          <div class="so-livros so-correio campo">
             <label for="f-estado">Estado</label>
             <select id="f-estado" name="estado">
               <option value="">Selecione…</option>
@@ -123,12 +157,12 @@ const { name: formName, successPage, types } = requestForm;
             </select>
           </div>
 
-          <div class="so-livros campo">
+          <div class="so-livros so-correio campo">
             <label for="f-cidade">Cidade</label>
             <input type="text" id="f-cidade" name="cidade" autocomplete="address-level2" />
           </div>
 
-          <div class="so-livros campo campo--largo">
+          <div class="so-livros so-correio campo campo--largo">
             <label for="f-endereco">Endereço completo para envio</label>
             <input
               type="text"
@@ -361,6 +395,47 @@ const { name: formName, successPage, types } = requestForm;
   #tipo-visita:checked ~ .campos .so-visita,
   #tipo-outro:checked ~ .campos .so-outro {
     display: flex;
+  }
+
+  /* Endereço só faz sentido quando o livro vai pelo correio. */
+  #entrega-retirar:checked ~ .campos .so-correio {
+    display: none;
+  }
+
+  .rotulo-grupo {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .entrega-opcoes {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+  }
+
+  .entrega-opcoes label {
+    flex: 1;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    background: var(--branco);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  #entrega-correio:checked ~ .campos label[for='entrega-correio'],
+  #entrega-retirar:checked ~ .campos label[for='entrega-retirar'] {
+    border-color: var(--verde);
+    background: var(--verde);
+    color: var(--branco);
+  }
+
+  .entrega-escolha small {
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--texto-suave);
   }
 
   .campo label {
