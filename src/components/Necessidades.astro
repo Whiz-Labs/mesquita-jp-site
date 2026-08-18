@@ -72,13 +72,23 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
                 !recorrente && n.meta_centavos
                   ? Math.min(100, Math.round((n.arrecadado_centavos / n.meta_centavos) * 100))
                   : null;
+              /* Chegar à meta é o momento que a lista existe para produzir, e
+                 até agora 100% e 40% tinham a mesma cara. O que falta é o outro
+                 número que importa: é ele que diz a quem lê o que fazer. */
+              const alcancada = pct !== null && n.arrecadado_centavos >= (n.meta_centavos ?? 0);
+              const falta = Math.max(0, (n.meta_centavos ?? 0) - n.arrecadado_centavos);
               return (
-                <li class:list={['item', { recorrente }]}>
+                <li class:list={['item', { recorrente, alcancada }]}>
                   <div class="cabeca">
                     <h3>
                       {n.titulo}
                       {recorrente && (
                         <span class="ciclo">{PERIODO[n.periodicidade as string].selo}</span>
+                      )}
+                      {alcancada && (
+                        <span class="conseguimos">
+                          <Icon name="check" size={14} /> Conseguimos
+                        </span>
                       )}
                     </h3>
 
@@ -120,7 +130,9 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
                         <div class="barra">
                           <i style={`width:${pct}%`} />
                         </div>
-                        <span class="pct">{pct}%</span>
+                        <span class="pct">
+                          {alcancada ? 'meta alcançada' : `faltam ${formatarCentavos(falta)}`}
+                        </span>
                       </div>
                     )
                   }
@@ -242,6 +254,28 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
     border-left-color: var(--dourado);
   }
 
+  /* Alcançada: a faixa e a barra viram douradas, e o cartão ganha um fundo
+     de leve. Sóbrio de propósito — é uma casa de oração prestando contas, não
+     uma campanha. O que muda é o suficiente para o olho parar ali. */
+  .item.alcancada {
+    border-left-color: var(--dourado-escuro);
+    background: linear-gradient(180deg, #fbf7e9, var(--branco) 70%);
+  }
+
+  .conseguimos {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.12rem 0.5rem 0.12rem 0.4rem;
+    border-radius: 999px;
+    background: var(--dourado-escuro);
+    color: var(--branco);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
   .cabeca {
     display: flex;
     flex-wrap: wrap;
@@ -317,14 +351,23 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
     display: block;
     height: 100%;
     background: var(--verde-claro);
+    border-radius: 999px;
+  }
+
+  .item.alcancada .barra i {
+    background: linear-gradient(90deg, var(--dourado), var(--dourado-escuro));
   }
 
   .pct {
     font-size: 0.78rem;
     color: var(--texto-suave);
     font-variant-numeric: tabular-nums;
-    min-width: 2.5rem;
-    text-align: right;
+    white-space: nowrap;
+  }
+
+  .item.alcancada .pct {
+    color: var(--dourado-escuro);
+    font-weight: 600;
   }
 
   @media (max-width: 46rem) {
@@ -363,6 +406,17 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
 
     .quem::after {
       content: ' · centroislamicojp.org.br/necessidades';
+    }
+
+    /* No papel o fundo e o dourado somem; o selo continua legível em preto. */
+    .item.alcancada {
+      background: #fff !important;
+    }
+
+    .conseguimos {
+      background: #fff !important;
+      color: #000;
+      border: 1px solid #000;
     }
 
     .item {
