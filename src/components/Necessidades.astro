@@ -86,16 +86,22 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
                       {recorrente ? (
                         n.meta_centavos ? (
                           <>
+                            {/* "cerca de" e não "~": quem lê a página não é
+                                obrigado a conhecer o símbolo. */}
+                            {n.valor_aproximado && <span class="por">cerca de</span>}
                             <strong>{formatarCentavos(n.meta_centavos)}</strong>
                             <span class="por">{PERIODO[n.periodicidade as string].unidade}</span>
                           </>
                         ) : (
-                          <span class="por">valor variável</span>
+                          <span class="por">valor que muda a cada período</span>
                         )
                       ) : n.meta_centavos ? (
                         <>
                           <strong>{formatarCentavos(n.arrecadado_centavos)}</strong>
-                          <span class="por">de {formatarCentavos(n.meta_centavos)}</span>
+                          <span class="por">
+                            de {n.valor_aproximado && 'cerca de '}
+                            {formatarCentavos(n.meta_centavos)}
+                          </span>
                         </>
                       ) : (
                         <>
@@ -272,6 +278,11 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
 
   .cifra strong {
     font-size: 1.05rem;
+  }
+
+  .por:first-child {
+    margin-right: 0.3rem;
+    margin-left: 0;
   }
 
   .por {

@@ -50,6 +50,8 @@ export interface Necessidade {
   prioridade: number;
   /** Nulo = alvo que se conclui. Preenchido = despesa que volta todo período. */
   periodicidade: 'semanal' | 'mensal' | null;
+  /** O valor é estimativa: a página diz "cerca de" em vez de afirmar. */
+  valor_aproximado: boolean;
 }
 
 export interface DadosContas {
@@ -153,7 +155,7 @@ export async function lerNecessidades(): Promise<Necessidade[]> {
   if (semChaves('necessidades')) return [];
   return (
     (await buscar<Necessidade>(
-      'necessidades?select=id,titulo,descricao,meta_centavos,arrecadado_centavos,prioridade,periodicidade&order=prioridade.desc,titulo.asc'
+      'necessidades?select=id,titulo,descricao,meta_centavos,arrecadado_centavos,prioridade,periodicidade,valor_aproximado&order=prioridade.desc,titulo.asc'
     )) ?? []
   );
 }
