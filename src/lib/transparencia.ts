@@ -44,13 +44,24 @@ export interface Necessidade {
   id: string;
   titulo: string;
   descricao: string | null;
+  /** Alvo a atingir; numa recorrente, o custo por período. */
   meta_centavos: number | null;
   arrecadado_centavos: number;
   prioridade: number;
+  /** Nulo = alvo que se conclui. Preenchido = despesa que volta todo período. */
+  periodicidade: 'semanal' | 'mensal' | null;
 }
 
 export interface DadosContas {
   meses: ResumoMes[];
+  /**
+   * Soma de todos os meses publicados. Só é o dinheiro que existe hoje se o
+   * livro começar de um saldo de abertura lançado — por isso vem acompanhado
+   * de `desde`, e a página diz desde quando a conta vale.
+   */
+  acumulado: number;
+  /** Competência do mês mais antigo publicado, ou `null` se não houver nenhum. */
+  desde: string | null;
   lancamentos: Lancamento[];
   /** Ids que foram substituídos por uma retificação publicada. */
   retificados: Set<string>;
@@ -60,6 +71,8 @@ export interface DadosContas {
 
 const CONTAS_VAZIAS: DadosContas = {
   meses: [],
+  acumulado: 0,
+  desde: null,
   lancamentos: [],
   retificados: new Set(),
   disponivel: false,
@@ -103,7 +116,7 @@ export async function lerContas(): Promise<DadosContas> {
   if (semChaves('contas')) return CONTAS_VAZIAS;
 
   const [meses, lancamentos] = await Promise.all([
-    buscar<ResumoMes>('resumo_mensal?select=*&order=competencia.desc&limit=24'),
+    buscar<ResumoMes>('resumo_mensal?select=*&order=competencia.desc'),
     buscar<Lancamento>(
       'lancamentos?select=id,tipo,data,competencia,categoria,descricao,valor_centavos,comprovante_path,comprovante_sha256,retifica&order=competencia.desc,data.desc'
     ),
@@ -112,9 +125,15 @@ export async function lerContas(): Promise<DadosContas> {
   if (!meses && !lancamentos) return CONTAS_VAZIAS;
 
   const linhas = lancamentos ?? [];
+  const porMes = meses ?? [];
 
   return {
-    meses: meses ?? [],
+    meses: porMes,
+    // A view já desconta o que foi retificado, então somar os meses dá o mesmo
+    // número que somar linha a linha — e dá de graça a garantia de que o site
+    // e o painel contam a mesma coisa.
+    acumulado: porMes.reduce((soma, m) => soma + m.saldo_centavos, 0),
+    desde: porMes.length ? porMes[porMes.length - 1].competencia : null,
     lancamentos: linhas,
     // Um lançamento que tem correção publicada apontando para ele sai da soma
     // (a view já faz isso), mas continua na lista — riscado. O livro guarda o
@@ -134,7 +153,7 @@ export async function lerNecessidades(): Promise<Necessidade[]> {
   if (semChaves('necessidades')) return [];
   return (
     (await buscar<Necessidade>(
-      'necessidades?select=id,titulo,descricao,meta_centavos,arrecadado_centavos,prioridade&order=prioridade.desc'
+      'necessidades?select=id,titulo,descricao,meta_centavos,arrecadado_centavos,prioridade,periodicidade&order=prioridade.desc,titulo.asc'
     )) ?? []
   );
 }

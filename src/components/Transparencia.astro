@@ -84,6 +84,21 @@ const temNumeros = dados.meses.length > 0;
         </div>
       ) : (
         <>
+          {/*
+            O número que quem lê procura primeiro. Vem com a data de início
+            colada nele de propósito: um saldo sem "desde quando" é um número
+            sem significado, e este só é o dinheiro que existe se o livro tiver
+            começado de um saldo de abertura lançado.
+          */}
+          <div class="caixa">
+            <p class="caixa-rot">Saldo acumulado{dados.desde && <> desde {nomeDoMes(dados.desde)}</>}</p>
+            <p class="caixa-valor">{formatarCentavos(dados.acumulado)}</p>
+            <p class="caixa-nota">
+              É a soma de tudo que entrou menos tudo que saiu, mês a mês, no que já foi
+              publicado. Parte deste valor pode já estar comprometida com algo em andamento.
+            </p>
+          </div>
+
           {detalhados.map((mes) => {
             const linhas = porMes.get(mes.competencia) ?? [];
             return (
@@ -232,6 +247,19 @@ const temNumeros = dados.meses.length > 0;
   }
 
   @media print {
+    /* Fundo verde chapado numa folha come tinta e sai cinza. */
+    .caixa {
+      background: #fff !important;
+      color: #000;
+      border: 2px solid #000;
+      padding: 0.75rem 1rem;
+    }
+
+    .caixa-rot,
+    .caixa-nota {
+      color: #333;
+    }
+
     /* O nome já está na linha de cima, impressa só no papel. */
     .eyebrow {
       display: none;
@@ -292,6 +320,40 @@ const temNumeros = dados.meses.length > 0;
   .vazio p {
     margin: 0;
     color: var(--texto-suave);
+  }
+
+  .caixa {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    background: var(--verde);
+    color: var(--branco);
+    border-radius: 18px;
+  }
+
+  .caixa-rot {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .caixa-valor {
+    margin: 0;
+    font-size: clamp(1.8rem, 5vw, 2.4rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  .caixa-nota {
+    margin: 0.35rem 0 0;
+    font-size: 0.83rem;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 48ch;
   }
 
   .mes {

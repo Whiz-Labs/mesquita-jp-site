@@ -1,31 +1,51 @@
 ---
 /**
- * O que a comunidade precisa comprar ou consertar.
+ * O que a comunidade precisa comprar, consertar ou manter.
  *
  * Página separada da prestação de contas de propósito: são duas conversas
  * diferentes. As contas dizem "isto foi feito com o que você deu"; as
  * necessidades dizem "isto ainda falta". Juntas numa página só, uma delas
  * sempre vira rodapé da outra.
  *
- * Só aparece o que a tesouraria marcou como "no site" — quem filtra é o RLS,
- * não este código.
+ * Duas naturezas na mesma lista, e a diferença é visível:
+ *
+ *   ALVO       — junta-se o dinheiro, compra-se, sai da lista. Tem barra de
+ *                progresso, porque há um fim para o qual progredir.
+ *   RECORRENTE — energia, água, limpeza. Não acaba: renasce todo mês. Não tem
+ *                barra, porque progresso em direção a quê? Mostra o custo do
+ *                período e pronto.
+ *
+ * Lista, e não grade de cartões: a ordem é informação — a tesouraria define a
+ * prioridade, e uma grade de três colunas embaralha isso na leitura.
+ *
+ * Só aparece o que a tesouraria marcou como "no site"; quem filtra é o RLS.
  */
 import Icon from './Icon.astro';
 import { canalPrincipal } from '../config';
 import { formatarCentavos, lerNecessidades } from '../lib/transparencia';
 
 const necessidades = await lerNecessidades();
+
+/** Dois rótulos por período: o do selo e o que acompanha o valor. */
+const PERIODO: Record<string, { selo: string; unidade: string }> = {
+  semanal: { selo: 'toda semana', unidade: 'por semana' },
+  mensal: { selo: 'todo mês', unidade: 'por mês' },
+};
 ---
 
 <section id="necessidades" class="nec-sec">
   <div class="container">
+    <p class="so-no-papel">Centro Islâmico de João Pessoa · centroislamicojp.org.br/necessidades</p>
+
     <div class="section-head">
       <span class="eyebrow">Centro Islâmico de João Pessoa</span>
       <h2>O que a comunidade precisa</h2>
       <p>
-        A lista é mantida pela tesouraria e vale para hoje. Quando uma delas é concluída,
-        sai daqui.
+        Em ordem de urgência, como a tesouraria definiu. Quando uma é concluída, sai daqui.
       </p>
+      <button type="button" class="imprimir nao-imprime" onclick="window.print()">
+        Imprimir ou salvar em PDF
+      </button>
     </div>
 
     {
@@ -42,36 +62,65 @@ const necessidades = await lerNecessidades();
         </div>
       ) : (
         <>
-          <div class="cards">
+          <ol class="lista">
             {necessidades.map((n) => {
-              const pct = n.meta_centavos
-                ? Math.min(100, Math.round((n.arrecadado_centavos / n.meta_centavos) * 100))
-                : null;
+              const recorrente = n.periodicidade !== null;
+              const pct =
+                !recorrente && n.meta_centavos
+                  ? Math.min(100, Math.round((n.arrecadado_centavos / n.meta_centavos) * 100))
+                  : null;
               return (
-                <article class="nec">
-                  <h3>{n.titulo}</h3>
-                  {n.descricao && <p class="desc">{n.descricao}</p>}
-                  {pct !== null ? (
-                    <>
-                      <div class="barra">
-                        <i style={`width:${pct}%`} />
-                      </div>
-                      <p class="num">
-                        <strong>{formatarCentavos(n.arrecadado_centavos)}</strong> de{' '}
-                        {formatarCentavos(n.meta_centavos ?? 0)}
-                      </p>
-                    </>
-                  ) : (
-                    <p class="num">
-                      <strong>{formatarCentavos(n.arrecadado_centavos)}</strong> arrecadados
+                <li class:list={['item', { recorrente }]}>
+                  <div class="cabeca">
+                    <h3>
+                      {n.titulo}
+                      {recorrente && (
+                        <span class="ciclo">{PERIODO[n.periodicidade as string].selo}</span>
+                      )}
+                    </h3>
+
+                    <p class="cifra">
+                      {recorrente ? (
+                        n.meta_centavos ? (
+                          <>
+                            <strong>{formatarCentavos(n.meta_centavos)}</strong>
+                            <span class="por">{PERIODO[n.periodicidade as string].unidade}</span>
+                          </>
+                        ) : (
+                          <span class="por">valor variável</span>
+                        )
+                      ) : n.meta_centavos ? (
+                        <>
+                          <strong>{formatarCentavos(n.arrecadado_centavos)}</strong>
+                          <span class="por">de {formatarCentavos(n.meta_centavos)}</span>
+                        </>
+                      ) : (
+                        <>
+                          <strong>{formatarCentavos(n.arrecadado_centavos)}</strong>
+                          <span class="por">arrecadados</span>
+                        </>
+                      )}
                     </p>
-                  )}
-                </article>
+                  </div>
+
+                  {n.descricao && <p class="desc">{n.descricao}</p>}
+
+                  {
+                    pct !== null && (
+                      <div class="linha-progresso">
+                        <div class="barra">
+                          <i style={`width:${pct}%`} />
+                        </div>
+                        <span class="pct">{pct}%</span>
+                      </div>
+                    )
+                  }
+                </li>
               );
             })}
-          </div>
+          </ol>
 
-          <a href={canalPrincipal.href} class="btn btn-primary" target="_blank" rel="noopener">
+          <a href={canalPrincipal.href} class="btn btn-primary nao-imprime" target="_blank" rel="noopener">
             <Icon name="heart" size={18} /> Quero ajudar
           </a>
         </>
@@ -89,6 +138,7 @@ const necessidades = await lerNecessidades();
   }
 
   .section-head {
+    position: relative;
     margin-bottom: 1.5rem;
   }
 
@@ -99,6 +149,29 @@ const necessidades = await lerNecessidades();
 
   .section-head p {
     font-size: 0.975rem;
+  }
+
+  .imprimir {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    background: var(--branco);
+    color: var(--texto-suave);
+    cursor: pointer;
+  }
+
+  .imprimir:hover {
+    border-color: var(--verde-claro);
+    color: var(--verde);
+  }
+
+  .so-no-papel {
+    display: none;
   }
 
   .vazio {
@@ -114,35 +187,95 @@ const necessidades = await lerNecessidades();
     color: var(--texto-suave);
   }
 
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.75rem;
-  }
-
-  .nec {
+  /* `ol` e não `ul`: a ordem é a prioridade que a tesouraria definiu, e isso é
+     conteúdo. O número em si não aparece — quem lê não precisa de "1., 2., 3."
+     para entender que o de cima vem primeiro. */
+  .lista {
+    list-style: none;
+    margin: 0 0 1.75rem;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: 1.25rem;
-    background: var(--branco);
-    border: 1px solid var(--borda);
-    border-radius: 16px;
+    gap: 0.75rem;
   }
 
-  .nec h3 {
+  .item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1.1rem 1.35rem;
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-left: 4px solid var(--verde-claro);
+    border-radius: 4px 14px 14px 4px;
+  }
+
+  /* Despesa que volta sempre não é urgência: a faixa dourada a distingue do
+     que tem fim, sem precisar de legenda. */
+  .item.recorrente {
+    border-left-color: var(--dourado);
+  }
+
+  .cabeca {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+  }
+
+  h3 {
     margin: 0;
     font-size: 1.05rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .ciclo {
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: var(--areia-escura);
+    color: var(--dourado-escuro);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .cifra {
+    margin: 0;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cifra strong {
+    font-size: 1.05rem;
+  }
+
+  .por {
+    margin-left: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--texto-suave);
   }
 
   .desc {
     margin: 0;
     font-size: 0.9rem;
     color: var(--texto-suave);
+    max-width: 68ch;
+  }
+
+  .linha-progresso {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.15rem;
   }
 
   .barra {
+    flex: 1;
     height: 8px;
     border-radius: 999px;
     background: var(--areia-escura);
@@ -155,15 +288,55 @@ const necessidades = await lerNecessidades();
     background: var(--verde-claro);
   }
 
-  .num {
-    margin: 0;
-    font-variant-numeric: tabular-nums;
-    font-size: 0.9rem;
+  .pct {
+    font-size: 0.78rem;
     color: var(--texto-suave);
+    font-variant-numeric: tabular-nums;
+    min-width: 2.5rem;
+    text-align: right;
   }
 
-  .num strong {
-    color: var(--texto);
-    font-size: 1rem;
+  @media (max-width: 46rem) {
+    .imprimir {
+      position: static;
+      margin-top: 0.75rem;
+    }
+
+    .cabeca {
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .cifra {
+      white-space: normal;
+    }
+  }
+
+  @media print {
+    .eyebrow {
+      display: none;
+    }
+
+    .so-no-papel {
+      display: block;
+      margin: 0 0 1rem;
+      font-size: 0.8rem;
+      color: #000;
+    }
+
+    .item {
+      break-inside: avoid;
+      border: 1px solid #999;
+      border-left: 4px solid #666;
+      padding: 0.6rem 0.8rem;
+    }
+
+    .barra {
+      border: 1px solid #999;
+    }
+
+    .barra i {
+      background: #666;
+    }
   }
 </style>
