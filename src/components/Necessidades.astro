@@ -35,18 +35,21 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
 
 <section id="necessidades" class="nec-sec">
   <div class="container">
-    <p class="so-no-papel">Centro Islâmico de João Pessoa · centroislamicojp.org.br/necessidades</p>
-
-    <div class="section-head">
-      <span class="eyebrow">Centro Islâmico de João Pessoa</span>
+    {/* Mesmo bloco da página de contas: as duas são documentos da mesma
+        tesouraria, e ler uma depois da outra não deve parecer trocar de site.
+        Ali o assunto é um número; aqui é o pedido, então o título é que ocupa
+        o lugar dele. */}
+    <header class="painel">
+      <p class="quem">Necessidades · Centro Islâmico de João Pessoa</p>
       <h2>O que a comunidade precisa</h2>
-      <p>
+      <p class="ressalva">
         Em ordem de urgência, como a tesouraria definiu. Quando uma é concluída, sai daqui.
       </p>
       <button type="button" class="imprimir nao-imprime" onclick="window.print()">
-        Imprimir ou salvar em PDF
+        <Icon name="printer" size={17} />
+        Imprimir · salvar em PDF
       </button>
-    </div>
+    </header>
 
     {
       necessidades.length === 0 ? (
@@ -137,41 +140,58 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
     min-height: 60vh;
   }
 
-  .section-head {
-    position: relative;
-    margin-bottom: 1.5rem;
+  .painel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 1.4rem 1.6rem 1.5rem;
+    margin-bottom: 1.25rem;
+    background: var(--verde);
+    color: var(--branco);
+    border-radius: 18px;
   }
 
-  .section-head h2 {
-    font-size: clamp(1.4rem, 3vw, 1.9rem);
-    margin-bottom: 0.4rem;
+  .quem {
+    margin: 0 0 0.4rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
   }
 
-  .section-head p {
-    font-size: 0.975rem;
+  .painel h2 {
+    margin: 0;
+    font-size: clamp(1.6rem, 4.5vw, 2.3rem);
+    line-height: 1.1;
+  }
+
+  .ressalva {
+    margin: 0.7rem 0 0;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.78);
+    max-width: 54ch;
   }
 
   .imprimir {
-    position: absolute;
-    top: 0;
-    right: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    align-self: start;
+    margin-top: 1.1rem;
     font: inherit;
     font-size: 0.85rem;
+    font-weight: 600;
     padding: 0.5rem 0.9rem;
-    border: 1px solid var(--borda);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 10px;
-    background: var(--branco);
-    color: var(--texto-suave);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
     cursor: pointer;
   }
 
   .imprimir:hover {
-    border-color: var(--verde-claro);
-    color: var(--verde);
-  }
-
-  .so-no-papel {
-    display: none;
+    border-color: var(--dourado-claro);
+    color: var(--dourado-claro);
   }
 
   .vazio {
@@ -297,9 +317,13 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
   }
 
   @media (max-width: 46rem) {
+    .painel {
+      padding: 1.2rem 1.15rem 1.3rem;
+    }
+
     .imprimir {
-      position: static;
-      margin-top: 0.75rem;
+      align-self: stretch;
+      justify-content: center;
     }
 
     .cabeca {
@@ -313,15 +337,21 @@ const PERIODO: Record<string, { selo: string; unidade: string }> = {
   }
 
   @media print {
-    .eyebrow {
-      display: none;
+    .painel {
+      background: #fff !important;
+      color: #000;
+      border: 2px solid #000;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
     }
 
-    .so-no-papel {
-      display: block;
-      margin: 0 0 1rem;
-      font-size: 0.8rem;
-      color: #000;
+    .quem,
+    .ressalva {
+      color: #333;
+    }
+
+    .quem::after {
+      content: ' · centroislamicojp.org.br/necessidades';
     }
 
     .item {
