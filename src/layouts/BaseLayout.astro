@@ -329,6 +329,51 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     border: 0;
   }
 
+  /* --------------------------------------------------------------------
+     Impressão
+     --------------------------------------------------------------------
+     A prestação de contas é feita para ser levada a uma reunião, guardada
+     em PDF, mostrada a quem pergunta. Numa folha, o menu, o rodapé e os
+     fundos coloridos não são conteúdo — são gasto de tinta e distração.
+     As regras ficam aqui, e não numa página só, porque valem para
+     qualquer coisa que alguém resolva imprimir.
+     -------------------------------------------------------------------- */
+  @media print {
+    .header,
+    .footer,
+    .skip-link,
+    .aviso,
+    .nao-imprime {
+      display: none !important;
+    }
+
+    body {
+      background: #fff;
+      color: #000;
+    }
+
+    /* Fundo colorido em folha branca vira cinza-chumbo e come tinta. */
+    .section,
+    section {
+      background: #fff !important;
+      padding-block: 0 !important;
+    }
+
+    a {
+      color: #000;
+      text-decoration: none;
+    }
+
+    /* Sombras somem; a borda fina é o que separa um bloco do outro no papel. */
+    * {
+      box-shadow: none !important;
+    }
+
+    @page {
+      margin: 1.5cm;
+    }
+  }
+
   .skip-link {
     position: absolute;
     left: -999px;
