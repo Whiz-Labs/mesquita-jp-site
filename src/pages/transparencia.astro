@@ -1,0 +1,30 @@
+---
+/**
+ * A prestação de contas, em página própria.
+ *
+ * Não está no menu e não está na home, de propósito: por enquanto ela é
+ * compartilhada por link — a quem perguntar, a quem doou, a quem quiser
+ * conferir. Pública, mas não anunciada.
+ *
+ * Quando fizer sentido subir para o menu, é uma linha em `Header.astro`; o
+ * conteúdo já está pronto e não muda.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Transparencia from '../components/Transparencia.astro';
+import { site } from '../config';
+---
+
+<BaseLayout
+  title={`Prestação de contas — ${site.name}`}
+  description="Para onde vai o dinheiro doado ao Centro Islâmico de João Pessoa: entradas, despesas e as notas de cada gasto, mês a mês."
+>
+  <Header />
+
+  <main id="conteudo">
+    <Transparencia />
+  </main>
+
+  <Footer />
+</BaseLayout>
