@@ -5,7 +5,8 @@ import { books, requestForm, canalPrincipal } from '../config';
 // Formulário único para três assuntos. A troca dos campos é feita só com CSS:
 // os três radios ficam como filhos diretos do <form>, escondidos, e cada bloco
 // condicional é irmão deles — `#tipo-x:checked ~ .campos .so-x { display: grid }`.
-// Sem JavaScript, e funciona antes de qualquer script carregar.
+// Sem JavaScript para trocar os campos; o único script (no fim) só enxuga o
+// envio, e o formulário funciona antes de ele carregar.
 //
 // Envio por Netlify Forms. Regras que não dá para quebrar:
 //  - o <input name="form-name"> precisa bater com o `name` do <form>;
@@ -22,8 +23,8 @@ const { name: formName, successPage, types } = requestForm;
       <h2>Peça livros islâmicos ou marque uma visita</h2>
       <p>
         Enviamos livros sobre o Islam para quem mora no {books.regionLabel}, conforme a
-        disponibilidade. O mesmo formulário serve para agendar uma visita à mesquita ou
-        tratar de qualquer outro assunto com a administração.
+        disponibilidade. O mesmo formulário serve para agendar uma visita à mesquita,
+        deixar uma opinião ou sugestão, ou tratar de qualquer outro assunto com a administração.
       </p>
     </div>
 
@@ -66,17 +67,27 @@ const { name: formName, successPage, types } = requestForm;
 
         <p class="form-pergunta" id="pergunta-assunto">O que você precisa?</p>
 
+        {/*
+          O <label> escondido antes de cada radio é para a Netlify, não para
+          gente: o e-mail de aviso nomeia cada campo pelo primeiro <label> que
+          aponta para ele, e sem este o grupo aparecia com o texto do primeiro
+          cartão ("Quero receber livros islâmicos Envio para o Nordeste: Outro
+          assunto"). O leitor de tela lê os dois rótulos, "Assunto" e o cartão.
+        */}
         {
           types.map((t, i) => (
-            <input
-              class="tipo-radio visually-hidden"
-              type="radio"
-              name="assunto"
-              id={`tipo-${t.id}`}
-              value={t.value}
-              checked={i === 0}
-              aria-describedby="pergunta-assunto"
-            />
+            <>
+              <label for={`tipo-${t.id}`} class="visually-hidden">Assunto</label>
+              <input
+                class="tipo-radio visually-hidden"
+                type="radio"
+                name="assunto"
+                id={`tipo-${t.id}`}
+                value={t.value}
+                checked={i === 0}
+                aria-describedby="pergunta-assunto"
+              />
+            </>
           ))
         }
 
@@ -87,8 +98,10 @@ const { name: formName, successPage, types } = requestForm;
           longe. A retirada está aqui para que quem é de João Pessoa não gere
           uma postagem que não precisava existir.
         */}
+        <label for="entrega-correio" class="visually-hidden">Como prefere receber</label>
         <input class="entrega-radio visually-hidden" type="radio" name="entrega" id="entrega-correio"
                value="Receber pelo correio" checked />
+        <label for="entrega-retirar" class="visually-hidden">Como prefere receber</label>
         <input class="entrega-radio visually-hidden" type="radio" name="entrega" id="entrega-retirar"
                value="Retirar na mesquita" />
 
@@ -222,6 +235,32 @@ const { name: formName, successPage, types } = requestForm;
     </div>
   </div>
 </section>
+
+<script>
+  // Os campos escondidos por CSS continuam no formulário e vão vazios no envio:
+  // o e-mail da Netlify chegava com "Estado:", "Cidade:", "Quantas pessoas:"
+  // em branco num pedido que nem era de livro. Na hora de enviar, desliga o que
+  // não está à vista — campo `disabled` não é enviado. Sem JavaScript, o envio
+  // segue como antes, só mais comprido.
+  document.querySelectorAll<HTMLFormElement>('form[data-netlify]').forEach((form) => {
+    form.addEventListener('submit', () => {
+      form.querySelectorAll<HTMLElement>('.campo').forEach((bloco) => {
+        if (getComputedStyle(bloco).display !== 'none') return;
+        bloco.querySelectorAll<HTMLInputElement>('input, select, textarea').forEach((c) => {
+          c.disabled = true;
+        });
+      });
+      // Os radios de entrega ficam fora do bloco que os mostra; só fazem
+      // sentido no pedido de livros.
+      const livros = form.querySelector<HTMLInputElement>('#tipo-livros');
+      if (livros && !livros.checked) {
+        form.querySelectorAll<HTMLInputElement>('input[name="entrega"]').forEach((r) => {
+          r.disabled = true;
+        });
+      }
+    });
+  });
+</script>
 
 <style>
   .pedidos {

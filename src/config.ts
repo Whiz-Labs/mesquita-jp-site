@@ -272,9 +272,9 @@ export const requestForm = {
     },
     {
       id: 'outro',
-      value: 'Outro assunto',
-      label: 'Tenho outro assunto',
-      hint: 'Dúvidas, pedidos, imprensa',
+      value: 'Opinião, sugestão ou outro assunto',
+      label: 'Tenho uma opinião ou outro assunto',
+      hint: 'Sugestões, dúvidas, pedidos, imprensa',
       icon: 'mail',
     },
   ],
