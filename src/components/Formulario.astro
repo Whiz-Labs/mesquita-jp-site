@@ -119,6 +119,15 @@ const { name: formName, successPage, types } = requestForm;
         <input class="visually-hidden" type="radio" name="shahada" id="shahada-feita"
                value="Já fiz a shahada e quero a declaração" />
 
+        {/* Quando fez: hoje, ontem ou outra data. O painel converte "hoje" e
+            "ontem" em data pelo momento do envio, no fuso de João Pessoa. */}
+        <label for="dia-hoje" class="visually-hidden">Dia em que fez a shahada</label>
+        <input class="visually-hidden" type="radio" name="shahada_dia" id="dia-hoje" value="Hoje" />
+        <label for="dia-ontem" class="visually-hidden">Dia em que fez a shahada</label>
+        <input class="visually-hidden" type="radio" name="shahada_dia" id="dia-ontem" value="Ontem" />
+        <label for="dia-outra" class="visually-hidden">Dia em que fez a shahada</label>
+        <input class="visually-hidden" type="radio" name="shahada_dia" id="dia-outra" value="Outra data" />
+
         {/* Onde fez a shahada: aqui ou em outro lugar. Mesma mecânica. */}
         <label for="onde-centro" class="visually-hidden">Onde fez a shahada</label>
         <input class="visually-hidden" type="radio" name="shahada_onde" id="onde-centro"
@@ -260,8 +269,17 @@ const { name: formName, successPage, types } = requestForm;
           {/* Só quando a shahada já foi feita: a declaração registra o dia e o
               lugar. Quem vai fazer na mesquita não tem data ainda — ela é
               combinada depois. */}
-          <div class="so-shahada so-feita campo">
-            <label for="f-shahada-data">Dia em que fez a shahada</label>
+          <div class="so-shahada so-feita campo campo--largo entrega-escolha">
+            <span class="rotulo-grupo">Dia em que fez a shahada</span>
+            <div class="entrega-opcoes">
+              <label for="dia-hoje">Hoje</label>
+              <label for="dia-ontem">Ontem</label>
+              <label for="dia-outra">Outra data</label>
+            </div>
+          </div>
+
+          <div class="so-shahada so-feita so-dia-outra campo">
+            <label for="f-shahada-data">Qual dia</label>
             <input type="date" id="f-shahada-data" name="shahada_data" />
           </div>
 
@@ -376,9 +394,11 @@ const { name: formName, successPage, types } = requestForm;
         });
       }
       if (!(shahada?.checked && feita?.checked)) {
-        form.querySelectorAll<HTMLInputElement>('input[name="shahada_onde"]').forEach((r) => {
-          r.disabled = true;
-        });
+        form
+          .querySelectorAll<HTMLInputElement>('input[name="shahada_onde"], input[name="shahada_dia"]')
+          .forEach((r) => {
+            r.disabled = true;
+          });
       }
     });
   });
@@ -583,6 +603,15 @@ const { name: formName, successPage, types } = requestForm;
     display: flex;
   }
 
+  /* "Qual dia" só em outra data. Três radios na cadeia. */
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ .campos .so-dia-outra {
+    display: none;
+  }
+
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ #dia-outra:checked ~ .campos .so-dia-outra {
+    display: flex;
+  }
+
   /* "Qual lugar" só em outro lugar. Três radios na cadeia. */
   #tipo-shahada:checked ~ #shahada-feita:checked ~ .campos .so-onde-outro {
     display: none;
@@ -619,6 +648,9 @@ const { name: formName, successPage, types } = requestForm;
   #entrega-retirar:checked ~ .campos label[for='entrega-retirar'],
   #shahada-fazer:checked ~ .campos label[for='shahada-fazer'],
   #shahada-feita:checked ~ .campos label[for='shahada-feita'],
+  #dia-hoje:checked ~ .campos label[for='dia-hoje'],
+  #dia-ontem:checked ~ .campos label[for='dia-ontem'],
+  #dia-outra:checked ~ .campos label[for='dia-outra'],
   #onde-centro:checked ~ .campos label[for='onde-centro'],
   #onde-outro:checked ~ .campos label[for='onde-outro'] {
     border-color: var(--verde);
