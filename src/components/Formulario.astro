@@ -307,9 +307,12 @@ const { name: formName, successPage, types } = requestForm;
             />
           </div>
 
-          <!-- Comum de novo -->
+          <!-- Comum de novo. Obrigatória, menos na shahada: lá tudo o que a
+               declaração precisa já está nos campos, e o script abaixo tira o
+               `required` enquanto esse assunto estiver escolhido, e mostra o
+               "(opcional)" do rótulo. -->
           <div class="campo campo--largo">
-            <label for="f-mensagem">Mensagem</label>
+            <label for="f-mensagem">Mensagem <span class="opcional">(opcional)</span></label>
             <textarea id="f-mensagem" name="mensagem" rows="4" required></textarea>
           </div>
         </div>
@@ -334,6 +337,20 @@ const { name: formName, successPage, types } = requestForm;
   // não está à vista — campo `disabled` não é enviado. Sem JavaScript, o envio
   // segue como antes, só mais comprido.
   document.querySelectorAll<HTMLFormElement>('form[data-netlify]').forEach((form) => {
+    // Mensagem opcional só na shahada. Sem JavaScript continua obrigatória em
+    // todos os assuntos — é o lado seguro de falhar.
+    const mensagem = form.querySelector<HTMLTextAreaElement>('#f-mensagem');
+    const assuntos = form.querySelectorAll<HTMLInputElement>('input[name="assunto"]');
+    const ajustarMensagem = () => {
+      if (!mensagem) return;
+      const opcional = Boolean(form.querySelector<HTMLInputElement>('#tipo-shahada')?.checked);
+      mensagem.required = !opcional;
+      // O "(opcional)" do rótulo acompanha o `required`: nunca um sem o outro.
+      mensagem.closest('.campo')?.classList.toggle('mensagem-opcional', opcional);
+    };
+    assuntos.forEach((r) => r.addEventListener('change', ajustarMensagem));
+    ajustarMensagem();
+
     form.addEventListener('submit', () => {
       form.querySelectorAll<HTMLElement>('.campo').forEach((bloco) => {
         if (getComputedStyle(bloco).display !== 'none') return;
@@ -673,6 +690,18 @@ const { name: formName, successPage, types } = requestForm;
     color: var(--dourado-escuro);
     flex-shrink: 0;
     margin-top: 0.15rem;
+  }
+
+  /* "(opcional)" aparece só quando o script tirou o `required` — a classe é
+     dele. Sem JavaScript o campo segue obrigatório e o rótulo não mente. */
+  .opcional {
+    display: none;
+    font-weight: 400;
+    color: var(--texto-suave);
+  }
+
+  .mensagem-opcional .opcional {
+    display: inline;
   }
 
   .form-enviar {
