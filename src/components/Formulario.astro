@@ -337,6 +337,46 @@ const { name: formName, successPage, types } = requestForm;
             />
           </div>
 
+          {/* Identificação para a declaração. Junto com o assunto é dado
+              sensível (LGPD) — por isso só na shahada, nunca obrigatório, e
+              com a finalidade dita ao lado. A administração confere com o
+              documento na entrega e apaga o pedido depois de registrar. */}
+          <div class="so-shahada campo">
+            <label for="f-documento">Documento (CPF ou passaporte)</label>
+            <input
+              type="text"
+              id="f-documento"
+              name="documento"
+              maxlength="40"
+              placeholder="000.000.000-00"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="so-shahada campo">
+            <label for="f-nascimento">Data de nascimento</label>
+            <input type="date" id="f-nascimento" name="nascimento" autocomplete="bday" />
+          </div>
+
+          <div class="so-shahada campo campo--largo">
+            <label for="f-nacionalidade">Nacionalidade</label>
+            <input
+              type="text"
+              id="f-nacionalidade"
+              name="nacionalidade"
+              maxlength="60"
+              placeholder="brasileira"
+            />
+          </div>
+
+          <div class="so-shahada campo campo--largo">
+            <p class="campo-nota">
+              Documento, nascimento e nacionalidade vão impressos na declaração — é o que a
+              torna válida fora daqui. Usamos só para isso, e apagamos o pedido depois de
+              emitir.
+            </p>
+          </div>
+
           {/* Só quando a shahada já foi feita: a declaração registra o dia e o
               lugar. Quem vai fazer na mesquita não tem data ainda — ela é
               combinada depois. */}
