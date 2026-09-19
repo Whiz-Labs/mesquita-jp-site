@@ -215,6 +215,18 @@ const { name: formName, successPage, types } = requestForm;
       </aside>
 
       <div class="form">
+        {/* O título diz de que pedido são os campos abaixo. Um por assunto;
+            só o do escolhido aparece — é o que liga, à vista, o cartão da
+            esquerda ao formulário da direita. */}
+        {
+          types.map((t) => (
+            <h3 class:list={['form-titulo', `form-titulo-${t.id}`]} aria-live="polite">
+              <Icon name={t.icon} size={20} />
+              {t.value}
+            </h3>
+          ))
+        }
+
         <div class="campos">
           <!-- Comuns a todos os assuntos -->
           <div class="campo">
@@ -632,6 +644,86 @@ const { name: formName, successPage, types } = requestForm;
     outline-offset: 2px;
   }
 
+  /* ---------- O que liga a escolha ao formulário ---------- */
+  .form-titulo {
+    display: none;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 2px solid var(--verde);
+    font-size: 1.125rem;
+    color: var(--verde);
+  }
+
+  .form-titulo :global(svg) {
+    color: var(--dourado-escuro);
+    flex-shrink: 0;
+  }
+
+  #tipo-livros:checked ~ .form .form-titulo-livros,
+  #tipo-visita:checked ~ .form .form-titulo-visita,
+  #tipo-shahada:checked ~ .form .form-titulo-shahada,
+  #tipo-outro:checked ~ .form .form-titulo-outro {
+    display: flex;
+  }
+
+  /* O cartão escolhido ganha uma ponta para a direita, na direção do
+     formulário: um quadrado girado que atravessa a borda do cartão. */
+  .tipo-card {
+    position: relative;
+  }
+
+  .tipo-card::after {
+    content: '';
+    display: none;
+    position: absolute;
+    top: 50%;
+    right: -0.55rem;
+    width: 1rem;
+    height: 1rem;
+    background: #f2f7f2;
+    border-top: 1px solid var(--verde);
+    border-right: 1px solid var(--verde);
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  #tipo-livros:checked ~ .ped-info label[for='tipo-livros']::after,
+  #tipo-visita:checked ~ .ped-info label[for='tipo-visita']::after,
+  #tipo-shahada:checked ~ .ped-info label[for='tipo-shahada']::after,
+  #tipo-outro:checked ~ .ped-info label[for='tipo-outro']::after {
+    display: block;
+  }
+
+  /* O que aparece com a troca de assunto entra deslizando. Funciona porque
+     sair de `display: none` reinicia a animação — sem JavaScript. */
+  @keyframes aparecer {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  .form-titulo,
+  .ajuda,
+  .campos .so-livros,
+  .campos .so-visita,
+  .campos .so-shahada,
+  .campos .so-outro {
+    animation: aparecer 0.28s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .form-titulo,
+    .ajuda,
+    .campos .so-livros,
+    .campos .so-visita,
+    .campos .so-shahada,
+    .campos .so-outro {
+      animation: none;
+    }
+  }
+
   .campos {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -816,6 +908,14 @@ const { name: formName, successPage, types } = requestForm;
     .ped-grid {
       grid-template-columns: 1fr;
       gap: 1.75rem;
+    }
+
+    /* Numa coluna só o formulário fica embaixo: a ponta aponta para baixo. */
+    .tipo-card::after {
+      top: auto;
+      right: 1.25rem;
+      bottom: -0.55rem;
+      transform: rotate(135deg);
     }
   }
 
