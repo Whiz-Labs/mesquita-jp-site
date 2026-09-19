@@ -1,10 +1,12 @@
 ---
 import Icon from './Icon.astro';
-import { books, requestForm, canalPrincipal } from '../config';
+import { books, requestForm, canalPrincipal, openingHours } from '../config';
 
-// Formulário único para três assuntos. A troca dos campos é feita só com CSS:
-// os três radios ficam como filhos diretos do <form>, escondidos, e cada bloco
-// condicional é irmão deles — `#tipo-x:checked ~ .campos .so-x { display: grid }`.
+// Formulário único para quatro assuntos. A troca é feita só com CSS: os radios
+// ficam como filhos diretos do <form>, escondidos, e tudo o que muda com eles
+// — os cartões da esquerda, a explicação de cada assunto, os campos da direita
+// — está em irmãos posteriores: `#tipo-x:checked ~ .form .so-x { display: flex }`.
+// Por isso o <form> é a grade inteira, e não só a coluna dos campos.
 // Sem JavaScript para trocar os campos; o único script (no fim) só enxuga o
 // envio, e o formulário funciona antes de ele carregar.
 //
@@ -29,112 +31,99 @@ const { name: formName, successPage, types } = requestForm;
       </p>
     </div>
 
-    <div class="ped-grid">
+    {/*
+      O <form> é a grade inteira — coluna da esquerda (cartões de assunto e a
+      explicação de cada um) e coluna da direita (os campos). Precisa ser
+      assim: a troca de tudo é feita por `:checked ~`, e o irmão seguinte do
+      radio tem de conter as duas colunas. Fora do <form>, os cartões não
+      pintariam nem a explicação trocaria.
+    */}
+    <form
+      class="ped-grid"
+      name={formName}
+      method="POST"
+      action={successPage}
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+    >
+      <!-- Netlify: identifica o formulário no painel. -->
+      <input type="hidden" name="form-name" value={formName} />
+
+      <!-- Honeypot: humano nenhum vê este campo; robô preenche e é descartado. -->
+      <p class="honeypot">
+        <label>Não preencha este campo: <input name="bot-field" tabindex="-1" /></label>
+      </p>
+
+      {/*
+        O <label> escondido antes de cada radio é para a Netlify, não para
+        gente: o e-mail de aviso nomeia cada campo pelo primeiro <label> que
+        aponta para ele, e sem este o grupo aparecia com o texto do primeiro
+        cartão ("Quero receber livros islâmicos Envio para o Nordeste: Outro
+        assunto"). O leitor de tela lê os dois rótulos, "Assunto" e o cartão.
+      */}
+      {
+        types.map((t, i) => (
+          <>
+            <label for={`tipo-${t.id}`} class="visually-hidden">Assunto</label>
+            <input
+              class="tipo-radio visually-hidden"
+              type="radio"
+              name="assunto"
+              id={`tipo-${t.id}`}
+              value={t.value}
+              checked={i === 0}
+              aria-describedby="pergunta-assunto"
+            />
+          </>
+        ))
+      }
+
+      {/*
+        Como recebe. Mesma mecânica dos radios de assunto: filhos diretos do
+        <form>, e os campos de endereço aparecem só no correio. O padrão é o
+        correio porque é para isso que este formulário existe — quem mora
+        longe. A retirada está aqui para que quem é de João Pessoa não gere
+        uma postagem que não precisava existir.
+      */}
+      <label for="entrega-correio" class="visually-hidden">Como prefere receber</label>
+      <input class="entrega-radio visually-hidden" type="radio" name="entrega" id="entrega-correio"
+             value="Receber pelo correio" checked />
+      <label for="entrega-retirar" class="visually-hidden">Como prefere receber</label>
+      <input class="entrega-radio visually-hidden" type="radio" name="entrega" id="entrega-retirar"
+             value="Retirar na mesquita" />
+
+      {/*
+        Shahada: já fez, ou quer fazer. Também filhos diretos do <form>, pela
+        mesma razão dos radios de entrega. Sem `checked` de propósito — as
+        duas respostas são igualmente prováveis, e um padrão aqui poria
+        palavras na boca de quem não escolheu.
+      */}
+      <label for="shahada-fazer" class="visually-hidden">Shahada</label>
+      <input class="visually-hidden" type="radio" name="shahada" id="shahada-fazer"
+             value="Quero fazer a shahada na mesquita" />
+      <label for="shahada-feita" class="visually-hidden">Shahada</label>
+      <input class="visually-hidden" type="radio" name="shahada" id="shahada-feita"
+             value="Já fiz a shahada e quero a declaração" />
+
+      {/* Quando fez: hoje, ontem ou outra data. O painel converte "hoje" e
+          "ontem" em data pelo momento do envio, no fuso de João Pessoa. */}
+      <label for="dia-hoje" class="visually-hidden">Dia em que fez a shahada</label>
+      <input class="visually-hidden" type="radio" name="shahada_dia" id="dia-hoje" value="Hoje" />
+      <label for="dia-ontem" class="visually-hidden">Dia em que fez a shahada</label>
+      <input class="visually-hidden" type="radio" name="shahada_dia" id="dia-ontem" value="Ontem" />
+      <label for="dia-outra" class="visually-hidden">Dia em que fez a shahada</label>
+      <input class="visually-hidden" type="radio" name="shahada_dia" id="dia-outra" value="Outra data" />
+
+      {/* Onde fez a shahada: aqui ou em outro lugar. Mesma mecânica. */}
+      <label for="onde-centro" class="visually-hidden">Onde fez a shahada</label>
+      <input class="visually-hidden" type="radio" name="shahada_onde" id="onde-centro"
+             value="No Centro Islâmico de João Pessoa" />
+      <label for="onde-outro" class="visually-hidden">Onde fez a shahada</label>
+      <input class="visually-hidden" type="radio" name="shahada_onde" id="onde-outro"
+             value="Em outro lugar" />
+
       <aside class="ped-info">
-        <h3>Como funciona o envio</h3>
-        <ol>
-          <li>Você escolhe “{types[0].label}” e preenche o endereço.</li>
-          <li>A gente confere o pedido e responde pelo contato que você deixar.</li>
-          <li>Havendo o livro em estoque, ele é postado para o seu endereço.</li>
-        </ol>
-        <p class="ped-note">{books.note}</p>
-
-        <h3 class="ped-h3">Estados atendidos</h3>
-        <ul class="ped-estados">
-          {books.states.map((uf) => <li>{uf}</li>)}
-        </ul>
-
-        <p class="ped-note">
-          Mora fora do {books.regionLabel}? Escreva mesmo assim pelo {canalPrincipal.nome} —
-          a gente tenta indicar alguém mais perto de você.
-        </p>
-      </aside>
-
-      <form
-        class="form"
-        name={formName}
-        method="POST"
-        action={successPage}
-        data-netlify="true"
-        netlify-honeypot="bot-field"
-      >
-        <!-- Netlify: identifica o formulário no painel. -->
-        <input type="hidden" name="form-name" value={formName} />
-
-        <!-- Honeypot: humano nenhum vê este campo; robô preenche e é descartado. -->
-        <p class="honeypot">
-          <label>Não preencha este campo: <input name="bot-field" tabindex="-1" /></label>
-        </p>
-
         <p class="form-pergunta" id="pergunta-assunto">O que você precisa?</p>
-
-        {/*
-          O <label> escondido antes de cada radio é para a Netlify, não para
-          gente: o e-mail de aviso nomeia cada campo pelo primeiro <label> que
-          aponta para ele, e sem este o grupo aparecia com o texto do primeiro
-          cartão ("Quero receber livros islâmicos Envio para o Nordeste: Outro
-          assunto"). O leitor de tela lê os dois rótulos, "Assunto" e o cartão.
-        */}
-        {
-          types.map((t, i) => (
-            <>
-              <label for={`tipo-${t.id}`} class="visually-hidden">Assunto</label>
-              <input
-                class="tipo-radio visually-hidden"
-                type="radio"
-                name="assunto"
-                id={`tipo-${t.id}`}
-                value={t.value}
-                checked={i === 0}
-                aria-describedby="pergunta-assunto"
-              />
-            </>
-          ))
-        }
-
-        {/*
-          Como recebe. Mesma mecânica dos radios de assunto: filhos diretos do
-          <form>, e os campos de endereço aparecem só no correio. O padrão é o
-          correio porque é para isso que este formulário existe — quem mora
-          longe. A retirada está aqui para que quem é de João Pessoa não gere
-          uma postagem que não precisava existir.
-        */}
-        <label for="entrega-correio" class="visually-hidden">Como prefere receber</label>
-        <input class="entrega-radio visually-hidden" type="radio" name="entrega" id="entrega-correio"
-               value="Receber pelo correio" checked />
-        <label for="entrega-retirar" class="visually-hidden">Como prefere receber</label>
-        <input class="entrega-radio visually-hidden" type="radio" name="entrega" id="entrega-retirar"
-               value="Retirar na mesquita" />
-
-        {/*
-          Shahada: já fez, ou quer fazer. Também filhos diretos do <form>, pela
-          mesma razão dos radios de entrega. Sem `checked` de propósito — as
-          duas respostas são igualmente prováveis, e um padrão aqui poria
-          palavras na boca de quem não escolheu.
-        */}
-        <label for="shahada-fazer" class="visually-hidden">Shahada</label>
-        <input class="visually-hidden" type="radio" name="shahada" id="shahada-fazer"
-               value="Quero fazer a shahada na mesquita" />
-        <label for="shahada-feita" class="visually-hidden">Shahada</label>
-        <input class="visually-hidden" type="radio" name="shahada" id="shahada-feita"
-               value="Já fiz a shahada e quero a declaração" />
-
-        {/* Quando fez: hoje, ontem ou outra data. O painel converte "hoje" e
-            "ontem" em data pelo momento do envio, no fuso de João Pessoa. */}
-        <label for="dia-hoje" class="visually-hidden">Dia em que fez a shahada</label>
-        <input class="visually-hidden" type="radio" name="shahada_dia" id="dia-hoje" value="Hoje" />
-        <label for="dia-ontem" class="visually-hidden">Dia em que fez a shahada</label>
-        <input class="visually-hidden" type="radio" name="shahada_dia" id="dia-ontem" value="Ontem" />
-        <label for="dia-outra" class="visually-hidden">Dia em que fez a shahada</label>
-        <input class="visually-hidden" type="radio" name="shahada_dia" id="dia-outra" value="Outra data" />
-
-        {/* Onde fez a shahada: aqui ou em outro lugar. Mesma mecânica. */}
-        <label for="onde-centro" class="visually-hidden">Onde fez a shahada</label>
-        <input class="visually-hidden" type="radio" name="shahada_onde" id="onde-centro"
-               value="No Centro Islâmico de João Pessoa" />
-        <label for="onde-outro" class="visually-hidden">Onde fez a shahada</label>
-        <input class="visually-hidden" type="radio" name="shahada_onde" id="onde-outro"
-               value="Em outro lugar" />
 
         <div class="tipo-grid">
           {
@@ -150,6 +139,82 @@ const { name: formName, successPage, types } = requestForm;
           }
         </div>
 
+        {/* Uma explicação por assunto; só a do assunto escolhido aparece. */}
+        <div class="ajuda ajuda-livros">
+          <h3>Como funciona o envio</h3>
+          <ol>
+            <li>Você preenche o endereço — ou escolhe retirar na mesquita.</li>
+            <li>A gente confere o pedido e responde pelo contato que você deixar.</li>
+            <li>Havendo o livro em estoque, ele é postado para o seu endereço.</li>
+          </ol>
+          <p class="ped-note">{books.note}</p>
+
+          <h3 class="ped-h3">Estados atendidos</h3>
+          <ul class="ped-estados">
+            {books.states.map((uf) => <li>{uf}</li>)}
+          </ul>
+
+          <p class="ped-note">
+            Mora fora do {books.regionLabel}? Escreva mesmo assim pelo {canalPrincipal.nome} —
+            a gente tenta indicar alguém mais perto de você.
+          </p>
+        </div>
+
+        <div class="ajuda ajuda-visita">
+          <h3>Como funciona a visita</h3>
+          <ol>
+            <li>Diga quantas pessoas vêm e o dia pretendido.</li>
+            <li>A gente confirma pelo contato que você deixar.</li>
+            <li>No dia, alguém da comunidade recebe vocês e mostra a mesquita.</li>
+          </ol>
+          <h3 class="ped-h3">Quando a mesquita abre</h3>
+          <ul class="ped-horarios">
+            {
+              openingHours.days.map((d) => (
+                <li>
+                  <strong>{d.day}</strong> {d.time}
+                  {d.note && <small> · {d.note}</small>}
+                </li>
+              ))
+            }
+          </ul>
+          <p class="ped-note">
+            Para outro dia ou horário, diga na mensagem — a gente vê o que dá para combinar.
+          </p>
+        </div>
+
+        <div class="ajuda ajuda-shahada">
+          <h3>Como funciona</h3>
+          <ol>
+            <li>Você preenche o nome como consta no seu documento.</li>
+            <li>
+              Se ainda não fez a shahada, a gente combina o dia pelo contato que você deixar.
+            </li>
+            <li>
+              A declaração é impressa pela administração, carimbada e assinada pelo imam e
+              por testemunhas, e entregue na mesquita.
+            </li>
+          </ol>
+          <p class="ped-note">
+            Ninguém precisa de documento para ser muçulmano — a declaração é para quem
+            quiser tê-la.
+          </p>
+        </div>
+
+        <div class="ajuda ajuda-outro">
+          <h3>Outro assunto</h3>
+          <p class="ped-note">
+            Sugestões, dúvidas, imprensa, parcerias: escreva o assunto em poucas palavras e
+            a mensagem. Respondemos pelo contato que você deixar.
+          </p>
+          <p class="ped-note">
+            Prefere falar direto?{' '}
+            <a href={canalPrincipal.href} target="_blank" rel="noopener">{canalPrincipal.acao}</a>.
+          </p>
+        </div>
+      </aside>
+
+      <div class="form">
         <div class="campos">
           <!-- Comuns a todos os assuntos -->
           <div class="campo">
@@ -228,14 +293,6 @@ const { name: formName, successPage, types } = requestForm;
             <input type="date" id="f-quando" name="quando" />
           </div>
 
-          <div class="so-visita campo campo--largo">
-            <p class="campo-aviso">
-              <Icon name="info" size={16} />
-              A mesquita abre sexta e sábado, das 11h30 às 13h00. Para outro dia, diga na
-              mensagem — a gente vê o que dá para combinar.
-            </p>
-          </div>
-
           <!-- Só para a shahada -->
           <div class="so-shahada campo campo--largo entrega-escolha">
             <span class="rotulo-grupo">Qual é o seu caso?</span>
@@ -255,7 +312,9 @@ const { name: formName, successPage, types } = requestForm;
             </p>
           </div>
 
-          <div class="so-shahada campo">
+          {/* Largos, os dois: sozinhos numa linha de duas colunas, ficavam
+              como campo esquecido ao lado de um buraco. */}
+          <div class="so-shahada campo campo--largo">
             <label for="f-nome-islamico">Nome islâmico, se adotou um</label>
             <input
               type="text"
@@ -278,7 +337,7 @@ const { name: formName, successPage, types } = requestForm;
             </div>
           </div>
 
-          <div class="so-shahada so-feita so-dia-outra campo">
+          <div class="so-shahada so-feita so-dia-outra campo campo--largo">
             <label for="f-shahada-data">Qual dia</label>
             <input type="date" id="f-shahada-data" name="shahada_data" />
           </div>
@@ -302,16 +361,6 @@ const { name: formName, successPage, types } = requestForm;
               maxlength="200"
               placeholder="cidade, mesquita ou diante de quem"
             />
-          </div>
-
-          <div class="so-shahada campo campo--largo">
-            <p class="campo-aviso">
-              <Icon name="info" size={16} />
-              Ninguém precisa de documento para ser muçulmano — a declaração é para quem
-              quiser tê-la. Ela é impressa pela administração, carimbada e assinada pelo imam
-              e por testemunhas, e entregue na mesquita. A gente combina o dia pelo contato
-              que você deixar.
-            </p>
           </div>
 
           <!-- Só para outro assunto -->
@@ -343,8 +392,8 @@ const { name: formName, successPage, types } = requestForm;
           Usamos o que você escrever só para responder ao seu pedido. Não publicamos nem
           repassamos seus dados.
         </p>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
 </section>
 
@@ -417,6 +466,37 @@ const { name: formName, successPage, types } = requestForm;
     align-items: start;
   }
 
+  /* A explicação de cada assunto só aparece com o assunto escolhido. */
+  .ajuda {
+    display: none;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--borda);
+  }
+
+  #tipo-livros:checked ~ .ped-info .ajuda-livros,
+  #tipo-visita:checked ~ .ped-info .ajuda-visita,
+  #tipo-shahada:checked ~ .ped-info .ajuda-shahada,
+  #tipo-outro:checked ~ .ped-info .ajuda-outro {
+    display: block;
+  }
+
+  .ped-horarios {
+    list-style: none;
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.9375rem;
+    color: var(--texto-suave);
+  }
+
+  .ped-horarios strong {
+    color: var(--texto);
+  }
+
+  .ped-horarios small {
+    font-size: 0.8125rem;
+  }
+
   /* ---------- Coluna explicativa ---------- */
   .ped-info {
     padding: 1.75rem;
@@ -478,13 +558,11 @@ const { name: formName, successPage, types } = requestForm;
     margin-bottom: 0.75rem;
   }
 
-  /* Quatro cartões: em duas colunas cada um ainda tem duas linhas de texto
-     legíveis. Em quatro, o rótulo quebrava palavra por palavra. */
+  /* Na coluna da esquerda os cartões empilham: um menu de quatro linhas. */
   .tipo-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1.75rem;
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
   }
 
   .tipo-card {
@@ -494,7 +572,7 @@ const { name: formName, successPage, types } = requestForm;
     padding: 0.9rem 1rem;
     border: 1px solid var(--borda);
     border-radius: var(--radius);
-    background: var(--areia);
+    background: var(--branco);
     cursor: pointer;
     transition: border-color 0.15s ease, background-color 0.15s ease;
   }
@@ -525,27 +603,27 @@ const { name: formName, successPage, types } = requestForm;
   }
 
   /* O radio escolhido pinta o cartão correspondente... */
-  #tipo-livros:checked ~ .tipo-grid label[for='tipo-livros'],
-  #tipo-visita:checked ~ .tipo-grid label[for='tipo-visita'],
-  #tipo-shahada:checked ~ .tipo-grid label[for='tipo-shahada'],
-  #tipo-outro:checked ~ .tipo-grid label[for='tipo-outro'] {
+  #tipo-livros:checked ~ .ped-info label[for='tipo-livros'],
+  #tipo-visita:checked ~ .ped-info label[for='tipo-visita'],
+  #tipo-shahada:checked ~ .ped-info label[for='tipo-shahada'],
+  #tipo-outro:checked ~ .ped-info label[for='tipo-outro'] {
     border-color: var(--verde);
     background: #f2f7f2;
     box-shadow: inset 0 0 0 1px var(--verde);
   }
 
-  #tipo-livros:checked ~ .tipo-grid label[for='tipo-livros'] :global(svg),
-  #tipo-visita:checked ~ .tipo-grid label[for='tipo-visita'] :global(svg),
-  #tipo-shahada:checked ~ .tipo-grid label[for='tipo-shahada'] :global(svg),
-  #tipo-outro:checked ~ .tipo-grid label[for='tipo-outro'] :global(svg) {
+  #tipo-livros:checked ~ .ped-info label[for='tipo-livros'] :global(svg),
+  #tipo-visita:checked ~ .ped-info label[for='tipo-visita'] :global(svg),
+  #tipo-shahada:checked ~ .ped-info label[for='tipo-shahada'] :global(svg),
+  #tipo-outro:checked ~ .ped-info label[for='tipo-outro'] :global(svg) {
     color: var(--verde);
   }
 
   /* Foco do teclado: o radio é invisível, então o anel vai no cartão. */
-  #tipo-livros:focus-visible ~ .tipo-grid label[for='tipo-livros'],
-  #tipo-visita:focus-visible ~ .tipo-grid label[for='tipo-visita'],
-  #tipo-shahada:focus-visible ~ .tipo-grid label[for='tipo-shahada'],
-  #tipo-outro:focus-visible ~ .tipo-grid label[for='tipo-outro'] {
+  #tipo-livros:focus-visible ~ .ped-info label[for='tipo-livros'],
+  #tipo-visita:focus-visible ~ .ped-info label[for='tipo-visita'],
+  #tipo-shahada:focus-visible ~ .ped-info label[for='tipo-shahada'],
+  #tipo-outro:focus-visible ~ .ped-info label[for='tipo-outro'] {
     outline: 3px solid var(--dourado);
     outline-offset: 2px;
   }
@@ -578,46 +656,46 @@ const { name: formName, successPage, types } = requestForm;
     display: none;
   }
 
-  #tipo-livros:checked ~ .campos .so-livros,
-  #tipo-visita:checked ~ .campos .so-visita,
-  #tipo-shahada:checked ~ .campos .so-shahada,
-  #tipo-outro:checked ~ .campos .so-outro {
+  #tipo-livros:checked ~ .form .so-livros,
+  #tipo-visita:checked ~ .form .so-visita,
+  #tipo-shahada:checked ~ .form .so-shahada,
+  #tipo-outro:checked ~ .form .so-outro {
     display: flex;
   }
 
   /* Endereço só faz sentido quando o livro vai pelo correio. */
-  #entrega-retirar:checked ~ .campos .so-correio {
+  #entrega-retirar:checked ~ .form .so-correio {
     display: none;
   }
 
   /* "Onde e quando" só para quem já fez a shahada. Vem depois da regra que
      mostra `.so-shahada`, pela mesma razão de sempre: mesma especificidade,
      ganha quem vem por último. */
-  #tipo-shahada:checked ~ .campos .so-feita {
+  #tipo-shahada:checked ~ .form .so-feita {
     display: none;
   }
 
   /* Os dois radios na cadeia: só "já fiz" marcado, com outro assunto aberto,
      não pode revelar o campo. */
-  #tipo-shahada:checked ~ #shahada-feita:checked ~ .campos .so-feita {
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ .form .so-feita {
     display: flex;
   }
 
   /* "Qual dia" só em outra data. Três radios na cadeia. */
-  #tipo-shahada:checked ~ #shahada-feita:checked ~ .campos .so-dia-outra {
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ .form .so-dia-outra {
     display: none;
   }
 
-  #tipo-shahada:checked ~ #shahada-feita:checked ~ #dia-outra:checked ~ .campos .so-dia-outra {
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ #dia-outra:checked ~ .form .so-dia-outra {
     display: flex;
   }
 
   /* "Qual lugar" só em outro lugar. Três radios na cadeia. */
-  #tipo-shahada:checked ~ #shahada-feita:checked ~ .campos .so-onde-outro {
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ .form .so-onde-outro {
     display: none;
   }
 
-  #tipo-shahada:checked ~ #shahada-feita:checked ~ #onde-outro:checked ~ .campos .so-onde-outro {
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ #onde-outro:checked ~ .form .so-onde-outro {
     display: flex;
   }
 
@@ -644,15 +722,15 @@ const { name: formName, successPage, types } = requestForm;
     cursor: pointer;
   }
 
-  #entrega-correio:checked ~ .campos label[for='entrega-correio'],
-  #entrega-retirar:checked ~ .campos label[for='entrega-retirar'],
-  #shahada-fazer:checked ~ .campos label[for='shahada-fazer'],
-  #shahada-feita:checked ~ .campos label[for='shahada-feita'],
-  #dia-hoje:checked ~ .campos label[for='dia-hoje'],
-  #dia-ontem:checked ~ .campos label[for='dia-ontem'],
-  #dia-outra:checked ~ .campos label[for='dia-outra'],
-  #onde-centro:checked ~ .campos label[for='onde-centro'],
-  #onde-outro:checked ~ .campos label[for='onde-outro'] {
+  #entrega-correio:checked ~ .form label[for='entrega-correio'],
+  #entrega-retirar:checked ~ .form label[for='entrega-retirar'],
+  #shahada-fazer:checked ~ .form label[for='shahada-fazer'],
+  #shahada-feita:checked ~ .form label[for='shahada-feita'],
+  #dia-hoje:checked ~ .form label[for='dia-hoje'],
+  #dia-ontem:checked ~ .form label[for='dia-ontem'],
+  #dia-outra:checked ~ .form label[for='dia-outra'],
+  #onde-centro:checked ~ .form label[for='onde-centro'],
+  #onde-outro:checked ~ .form label[for='onde-outro'] {
     border-color: var(--verde);
     background: var(--verde);
     color: var(--branco);
@@ -707,23 +785,6 @@ const { name: formName, successPage, types } = requestForm;
     color: var(--texto-suave);
   }
 
-  .campo-aviso {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--texto-suave);
-    background: var(--areia-escura);
-    border-radius: 10px;
-    padding: 0.75rem 0.9rem;
-  }
-
-  .campo-aviso :global(svg) {
-    color: var(--dourado-escuro);
-    flex-shrink: 0;
-    margin-top: 0.15rem;
-  }
-
   /* "(opcional)" aparece só quando o script tirou o `required` — a classe é
      dele. Sem JavaScript o campo segue obrigatório e o rótulo não mente. */
   .opcional {
@@ -755,7 +816,6 @@ const { name: formName, successPage, types } = requestForm;
   }
 
   @media (max-width: 620px) {
-    .tipo-grid,
     .campos {
       grid-template-columns: 1fr;
     }
