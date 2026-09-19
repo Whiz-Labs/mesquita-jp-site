@@ -119,6 +119,14 @@ const { name: formName, successPage, types } = requestForm;
         <input class="visually-hidden" type="radio" name="shahada" id="shahada-feita"
                value="Já fiz a shahada e quero a declaração" />
 
+        {/* Onde fez a shahada: aqui ou em outro lugar. Mesma mecânica. */}
+        <label for="onde-centro" class="visually-hidden">Onde fez a shahada</label>
+        <input class="visually-hidden" type="radio" name="shahada_onde" id="onde-centro"
+               value="No Centro Islâmico de João Pessoa" />
+        <label for="onde-outro" class="visually-hidden">Onde fez a shahada</label>
+        <input class="visually-hidden" type="radio" name="shahada_onde" id="onde-outro"
+               value="Em outro lugar" />
+
         <div class="tipo-grid">
           {
             types.map((t) => (
@@ -257,12 +265,22 @@ const { name: formName, successPage, types } = requestForm;
             <input type="date" id="f-shahada-data" name="shahada_data" />
           </div>
 
-          <div class="so-shahada so-feita campo campo--largo">
-            <label for="f-shahada-onde">Onde fez a shahada</label>
+          <div class="so-shahada so-feita campo campo--largo entrega-escolha">
+            <span class="rotulo-grupo">Onde fez a shahada</span>
+            <div class="entrega-opcoes">
+              <label for="onde-centro">No Centro Islâmico de João Pessoa</label>
+              <label for="onde-outro">Em outro lugar</label>
+            </div>
+          </div>
+
+          {/* O campo livre só para "outro lugar". No webhook do painel, este
+              texto substitui o valor do radio na coluna `shahada_onde`. */}
+          <div class="so-shahada so-feita so-onde-outro campo campo--largo">
+            <label for="f-shahada-onde-outro">Qual lugar</label>
             <input
               type="text"
-              id="f-shahada-onde"
-              name="shahada_onde"
+              id="f-shahada-onde-outro"
+              name="shahada_onde_outro"
               maxlength="200"
               placeholder="cidade, mesquita ou diante de quem"
             />
@@ -331,10 +349,17 @@ const { name: formName, successPage, types } = requestForm;
           r.disabled = true;
         });
       }
-      // Idem para os radios da shahada.
+      // Idem para os radios da shahada — e os de "onde" só valem quando a
+      // shahada já foi feita.
       const shahada = form.querySelector<HTMLInputElement>('#tipo-shahada');
+      const feita = form.querySelector<HTMLInputElement>('#shahada-feita');
       if (shahada && !shahada.checked) {
         form.querySelectorAll<HTMLInputElement>('input[name="shahada"]').forEach((r) => {
+          r.disabled = true;
+        });
+      }
+      if (!(shahada?.checked && feita?.checked)) {
+        form.querySelectorAll<HTMLInputElement>('input[name="shahada_onde"]').forEach((r) => {
           r.disabled = true;
         });
       }
@@ -541,6 +566,15 @@ const { name: formName, successPage, types } = requestForm;
     display: flex;
   }
 
+  /* "Qual lugar" só em outro lugar. Três radios na cadeia. */
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ .campos .so-onde-outro {
+    display: none;
+  }
+
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ #onde-outro:checked ~ .campos .so-onde-outro {
+    display: flex;
+  }
+
   .rotulo-grupo {
     font-size: 0.875rem;
     font-weight: 600;
@@ -567,7 +601,9 @@ const { name: formName, successPage, types } = requestForm;
   #entrega-correio:checked ~ .campos label[for='entrega-correio'],
   #entrega-retirar:checked ~ .campos label[for='entrega-retirar'],
   #shahada-fazer:checked ~ .campos label[for='shahada-fazer'],
-  #shahada-feita:checked ~ .campos label[for='shahada-feita'] {
+  #shahada-feita:checked ~ .campos label[for='shahada-feita'],
+  #onde-centro:checked ~ .campos label[for='onde-centro'],
+  #onde-outro:checked ~ .campos label[for='onde-outro'] {
     border-color: var(--verde);
     background: var(--verde);
     color: var(--branco);
