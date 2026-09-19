@@ -403,7 +403,11 @@ const { name: formName, successPage, types } = requestForm;
   // em branco num pedido que nem era de livro. Na hora de enviar, desliga o que
   // não está à vista — campo `disabled` não é enviado. Sem JavaScript, o envio
   // segue como antes, só mais comprido.
-  document.querySelectorAll<HTMLFormElement>('form[data-netlify]').forEach((form) => {
+  // Pelo `name`, e não por `form[data-netlify]`: a Netlify APAGA esse
+  // atributo do HTML ao publicar (é assim que ela marca o formulário como
+  // processado), e o seletor não encontrava nada em produção — nem este
+  // script nem o de enxugar o envio rodavam lá.
+  document.querySelectorAll<HTMLFormElement>('form[name="pedidos"]').forEach((form) => {
     // Mensagem opcional só na shahada. Sem JavaScript continua obrigatória em
     // todos os assuntos — é o lado seguro de falhar.
     const mensagem = form.querySelector<HTMLTextAreaElement>('#f-mensagem');
