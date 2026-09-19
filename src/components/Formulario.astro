@@ -23,8 +23,9 @@ const { name: formName, successPage, types } = requestForm;
       <h2>Peça livros islâmicos ou marque uma visita</h2>
       <p>
         Enviamos livros sobre o Islam para quem mora no {books.regionLabel}, conforme a
-        disponibilidade. O mesmo formulário serve para agendar uma visita à mesquita,
-        deixar uma opinião ou sugestão, ou tratar de qualquer outro assunto com a administração.
+        disponibilidade. O mesmo formulário serve para agendar uma visita à mesquita, para
+        quem quer abraçar o Islam e fazer a shahada, para deixar uma opinião ou sugestão, ou
+        tratar de qualquer outro assunto com a administração.
       </p>
     </div>
 
@@ -104,6 +105,19 @@ const { name: formName, successPage, types } = requestForm;
         <label for="entrega-retirar" class="visually-hidden">Como prefere receber</label>
         <input class="entrega-radio visually-hidden" type="radio" name="entrega" id="entrega-retirar"
                value="Retirar na mesquita" />
+
+        {/*
+          Shahada: já fez, ou quer fazer. Também filhos diretos do <form>, pela
+          mesma razão dos radios de entrega. Sem `checked` de propósito — as
+          duas respostas são igualmente prováveis, e um padrão aqui poria
+          palavras na boca de quem não escolheu.
+        */}
+        <label for="shahada-fazer" class="visually-hidden">Shahada</label>
+        <input class="visually-hidden" type="radio" name="shahada" id="shahada-fazer"
+               value="Quero fazer a shahada na mesquita" />
+        <label for="shahada-feita" class="visually-hidden">Shahada</label>
+        <input class="visually-hidden" type="radio" name="shahada" id="shahada-feita"
+               value="Já fiz a shahada e quero a declaração" />
 
         <div class="tipo-grid">
           {
@@ -205,6 +219,65 @@ const { name: formName, successPage, types } = requestForm;
             </p>
           </div>
 
+          <!-- Só para a shahada -->
+          <div class="so-shahada campo campo--largo entrega-escolha">
+            <span class="rotulo-grupo">Qual é o seu caso?</span>
+            <div class="entrega-opcoes">
+              <label for="shahada-fazer">Quero fazer a shahada</label>
+              <label for="shahada-feita">Já fiz, quero a declaração</label>
+            </div>
+          </div>
+
+          {/* O que vai impresso na declaração, e só isso. O painel da
+              administração recebe estes campos já separados e imprime a
+              declaração a partir deles — por isso o nome tem de ser o do
+              documento, e não o apelido. */}
+          <div class="so-shahada campo campo--largo">
+            <p class="campo-nota">
+              O nome acima sai impresso na declaração: escreva como consta no seu documento.
+            </p>
+          </div>
+
+          <div class="so-shahada campo">
+            <label for="f-nome-islamico">Nome islâmico, se adotou um</label>
+            <input
+              type="text"
+              id="f-nome-islamico"
+              name="nome_islamico"
+              maxlength="120"
+              placeholder="opcional"
+            />
+          </div>
+
+          {/* Só quando a shahada já foi feita: a declaração registra o dia e o
+              lugar. Quem vai fazer na mesquita não tem data ainda — ela é
+              combinada depois. */}
+          <div class="so-shahada so-feita campo">
+            <label for="f-shahada-data">Dia em que fez a shahada</label>
+            <input type="date" id="f-shahada-data" name="shahada_data" />
+          </div>
+
+          <div class="so-shahada so-feita campo campo--largo">
+            <label for="f-shahada-onde">Onde fez a shahada</label>
+            <input
+              type="text"
+              id="f-shahada-onde"
+              name="shahada_onde"
+              maxlength="200"
+              placeholder="cidade, mesquita ou diante de quem"
+            />
+          </div>
+
+          <div class="so-shahada campo campo--largo">
+            <p class="campo-aviso">
+              <Icon name="info" size={16} />
+              Ninguém precisa de documento para ser muçulmano — a declaração é para quem
+              quiser tê-la. Ela é impressa pela administração, carimbada e assinada pelo imam
+              e por testemunhas, e entregue na mesquita. A gente combina o dia pelo contato
+              que você deixar.
+            </p>
+          </div>
+
           <!-- Só para outro assunto -->
           <div class="so-outro campo campo--largo">
             <label for="f-titulo">Assunto</label>
@@ -255,6 +328,13 @@ const { name: formName, successPage, types } = requestForm;
       const livros = form.querySelector<HTMLInputElement>('#tipo-livros');
       if (livros && !livros.checked) {
         form.querySelectorAll<HTMLInputElement>('input[name="entrega"]').forEach((r) => {
+          r.disabled = true;
+        });
+      }
+      // Idem para os radios da shahada.
+      const shahada = form.querySelector<HTMLInputElement>('#tipo-shahada');
+      if (shahada && !shahada.checked) {
+        form.querySelectorAll<HTMLInputElement>('input[name="shahada"]').forEach((r) => {
           r.disabled = true;
         });
       }
@@ -336,9 +416,11 @@ const { name: formName, successPage, types } = requestForm;
     margin-bottom: 0.75rem;
   }
 
+  /* Quatro cartões: em duas colunas cada um ainda tem duas linhas de texto
+     legíveis. Em quatro, o rótulo quebrava palavra por palavra. */
   .tipo-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
     margin-bottom: 1.75rem;
   }
@@ -383,6 +465,7 @@ const { name: formName, successPage, types } = requestForm;
   /* O radio escolhido pinta o cartão correspondente... */
   #tipo-livros:checked ~ .tipo-grid label[for='tipo-livros'],
   #tipo-visita:checked ~ .tipo-grid label[for='tipo-visita'],
+  #tipo-shahada:checked ~ .tipo-grid label[for='tipo-shahada'],
   #tipo-outro:checked ~ .tipo-grid label[for='tipo-outro'] {
     border-color: var(--verde);
     background: #f2f7f2;
@@ -391,6 +474,7 @@ const { name: formName, successPage, types } = requestForm;
 
   #tipo-livros:checked ~ .tipo-grid label[for='tipo-livros'] :global(svg),
   #tipo-visita:checked ~ .tipo-grid label[for='tipo-visita'] :global(svg),
+  #tipo-shahada:checked ~ .tipo-grid label[for='tipo-shahada'] :global(svg),
   #tipo-outro:checked ~ .tipo-grid label[for='tipo-outro'] :global(svg) {
     color: var(--verde);
   }
@@ -398,6 +482,7 @@ const { name: formName, successPage, types } = requestForm;
   /* Foco do teclado: o radio é invisível, então o anel vai no cartão. */
   #tipo-livros:focus-visible ~ .tipo-grid label[for='tipo-livros'],
   #tipo-visita:focus-visible ~ .tipo-grid label[for='tipo-visita'],
+  #tipo-shahada:focus-visible ~ .tipo-grid label[for='tipo-shahada'],
   #tipo-outro:focus-visible ~ .tipo-grid label[for='tipo-outro'] {
     outline: 3px solid var(--dourado);
     outline-offset: 2px;
@@ -426,12 +511,14 @@ const { name: formName, successPage, types } = requestForm;
      volta a revelar um campo escondido. */
   .campos .so-livros,
   .campos .so-visita,
+  .campos .so-shahada,
   .campos .so-outro {
     display: none;
   }
 
   #tipo-livros:checked ~ .campos .so-livros,
   #tipo-visita:checked ~ .campos .so-visita,
+  #tipo-shahada:checked ~ .campos .so-shahada,
   #tipo-outro:checked ~ .campos .so-outro {
     display: flex;
   }
@@ -439,6 +526,19 @@ const { name: formName, successPage, types } = requestForm;
   /* Endereço só faz sentido quando o livro vai pelo correio. */
   #entrega-retirar:checked ~ .campos .so-correio {
     display: none;
+  }
+
+  /* "Onde e quando" só para quem já fez a shahada. Vem depois da regra que
+     mostra `.so-shahada`, pela mesma razão de sempre: mesma especificidade,
+     ganha quem vem por último. */
+  #tipo-shahada:checked ~ .campos .so-feita {
+    display: none;
+  }
+
+  /* Os dois radios na cadeia: só "já fiz" marcado, com outro assunto aberto,
+     não pode revelar o campo. */
+  #tipo-shahada:checked ~ #shahada-feita:checked ~ .campos .so-feita {
+    display: flex;
   }
 
   .rotulo-grupo {
@@ -465,7 +565,9 @@ const { name: formName, successPage, types } = requestForm;
   }
 
   #entrega-correio:checked ~ .campos label[for='entrega-correio'],
-  #entrega-retirar:checked ~ .campos label[for='entrega-retirar'] {
+  #entrega-retirar:checked ~ .campos label[for='entrega-retirar'],
+  #shahada-fazer:checked ~ .campos label[for='shahada-fazer'],
+  #shahada-feita:checked ~ .campos label[for='shahada-feita'] {
     border-color: var(--verde);
     background: var(--verde);
     color: var(--branco);
@@ -512,6 +614,12 @@ const { name: formName, successPage, types } = requestForm;
   .campo input::placeholder,
   .campo textarea::placeholder {
     color: #93a091;
+  }
+
+  .campo-nota {
+    margin: -0.25rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--texto-suave);
   }
 
   .campo-aviso {

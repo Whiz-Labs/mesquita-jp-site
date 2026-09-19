@@ -240,7 +240,13 @@ export const books = {
 } as const;
 
 /**
- * Formulário único de pedidos (livros, visita, outro assunto).
+ * Formulário único de pedidos (livros, visita, shahada, outro assunto).
+ *
+ * A shahada entra aqui como *pedido*, e só isso: a pessoa diz que quer fazer
+ * a shahada na mesquita, ou que já fez e quer a declaração. A declaração em si
+ * é emitida pelo painel da administração (`centroislamicojp-admin`, aba
+ * Shahada), com imam e testemunhas — nunca gerada pelo site a partir de um nome
+ * digitado, senão qualquer pessoa emitiria um documento em nome do centro.
  *
  * Os campos mudam conforme o assunto escolhido, e a troca é feita só com CSS
  * (radio + seletor de irmão), sem JavaScript — veja Formulario.astro.
@@ -269,6 +275,13 @@ export const requestForm = {
       label: 'Quero visitar a mesquita',
       hint: 'Pessoas, escolas e grupos',
       icon: 'mosque',
+    },
+    {
+      id: 'shahada',
+      value: 'Shahada — abraçar o Islam',
+      label: 'Quero abraçar o Islam',
+      hint: 'Shahada e declaração',
+      icon: 'heart',
     },
     {
       id: 'outro',
@@ -304,9 +317,13 @@ export const documents: DocItem[] = [
   {
     title: 'Declaração de shahada',
     description:
-      'Modelo de declaração entregue a quem abraça o Islam no centro, com registro e testemunhas.',
-    file: null,
+      'Modelo em branco da declaração entregue a quem abraça o Islam no centro, com número de registro, imam e testemunhas. A via oficial é emitida pela administração.',
+    // Gerado pelo painel (`centroislamicojp-admin` → Shahada → Modelo em
+    // branco → Imprimir → Salvar como PDF). Se o modelo mudar lá, gere de novo
+    // e substitua o arquivo — o site não sabe gerar este PDF.
+    file: '/docs/declaracao-de-shahada.pdf',
     format: 'PDF',
+    size: '660 KB',
   },
   {
     title: 'Pedido de casamento islâmico (nikah)',
