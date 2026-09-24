@@ -1,0 +1,24 @@
+---
+/**
+ * Cursos e oficinas em página própria — o link para mandar no grupo de
+ * WhatsApp. Mesmo componente e mesmo formulário (`inscricoes`) da home.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Cursos from '../../components/Cursos.astro';
+import { site } from '../../config';
+---
+
+<BaseLayout
+  title={`Cursos e oficinas — ${site.name}`}
+  description="Estudos islâmicos, oficinas de culinária e português para estrangeiros no Centro Islâmico de João Pessoa. Inscreva-se pelo site."
+>
+  <Header />
+
+  <main id="conteudo">
+    <Cursos pagina />
+  </main>
+
+  <Footer />
+</BaseLayout>

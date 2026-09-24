@@ -113,6 +113,15 @@ direct children of `<form>`, and each conditional block is matched by
 - no conditional field may be `required` — browsers refuse to submit a form with a hidden
   required control, and the failure is silent to the user.
 
+**Courses** (`Cursos.astro`, section `#cursos`, data in `cursos` in `src/config.ts`) have a
+separate Netlify form, `inscricoes`, with ids prefixed `i-`. Three categories — Islamic
+studies (free), cooking workshops (fee undecided), Portuguese for foreigners (paid, the
+teacher is paid). `turmas` is empty until a class is confirmed; with no open class every
+category shows only "avise-me quando abrir turma", so the form works as an interest list.
+Never add a turma, day or price that the administration has not confirmed. The fields
+swap with `:has()` here (the radios sit inside their cards), and nothing is paid through the
+site — the paid-course note says the fee is arranged when the place is confirmed.
+
 Form ids are prefixed `f-` because the page's section anchors already own the plain names
 (`#contato` was both a section and an input before the prefix).
 

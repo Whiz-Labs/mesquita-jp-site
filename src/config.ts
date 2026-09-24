@@ -294,6 +294,105 @@ export const requestForm = {
 } as const;
 
 /**
+ * Cursos e oficinas — inscrição pelo site (seção `#cursos`, Cursos.astro).
+ *
+ * Três tipos, cada um com o seu regime de valor: estudos islâmicos são
+ * gratuitos, português para estrangeiros é pago, e as oficinas de culinária
+ * ainda não têm valor decidido.
+ *
+ * `turmas` começa VAZIA de propósito: nenhuma turma foi confirmada ainda. Com
+ * a lista vazia o formulário vira uma lista de interesse ("avise-me quando
+ * abrir") — nunca invente uma turma, dia ou preço para preencher a seção. Uma
+ * turma só entra aqui quando a administração tiver dia, horário e, se for
+ * paga, o valor.
+ *
+ * Para fechar as inscrições de uma turma, mude `aberta` para `false` (ou
+ * apague a turma). O site não fecha nada sozinho pela data.
+ */
+export type CursoCategoria = 'religioso' | 'culinaria' | 'idioma';
+
+export type Turma = {
+  /** Identificador curto, sem espaço: 'portugues-basico-2027-1'. */
+  id: string;
+  categoria: CursoCategoria;
+  titulo: string;
+  /** Dia e horário por extenso: 'Terças e quintas, 19h00–20h30'. */
+  quando: string;
+  /** Opcional: 'Começa em 3 de março', 'Oito encontros'. */
+  detalhe?: string;
+  /** Sobrepõe o valor da categoria: 'R$ 60 por mês', 'R$ 20 (material)'. */
+  valor?: string;
+  aberta: boolean;
+};
+
+export type Categoria = {
+  id: CursoCategoria;
+  /** Endereço da página própria: /cursos/<slug> — o link para mandar no grupo. */
+  slug: string;
+  nome: string;
+  descricao: string;
+  icon: string;
+  /** Rótulo curto do valor; null = ainda não decidido (não mostra nada). */
+  valor: string | null;
+  /** Paga: o formulário avisa que o valor é combinado depois, fora do site. */
+  paga: boolean;
+};
+
+export const cursos = {
+  /** Nome do formulário no painel da Netlify. */
+  formName: 'inscricoes',
+  successPage: '/obrigado',
+  categorias: [
+    {
+      id: 'religioso',
+      slug: 'estudos-islamicos',
+      nome: 'Estudos islâmicos',
+      descricao: 'Aulas sobre a fé e a prática do Islam, abertas a quem quiser conhecer.',
+      icon: 'book',
+      valor: 'Gratuito',
+      paga: false,
+    },
+    {
+      id: 'culinaria',
+      slug: 'culinaria',
+      nome: 'Oficinas de culinária',
+      descricao: 'Receitas de países muçulmanos, preparadas e comidas junto.',
+      icon: 'utensils',
+      // TODO: decidir se as oficinas cobram (ingredientes) ou são gratuitas.
+      valor: null,
+      paga: false,
+    },
+    {
+      id: 'idioma',
+      slug: 'portugues',
+      nome: 'Português e cultura para estrangeiros',
+      // Língua E cultura: o objetivo é que quem chegou consiga tocar a vida
+      // aqui — não só a gramática.
+      descricao:
+        'O português do dia a dia e o jeito de resolver a vida no Brasil, para quem chegou agora — de qualquer país e religião.',
+      icon: 'languages',
+      valor: 'Pago',
+      paga: true,
+    },
+  ] as Categoria[],
+  turmas: [] as Turma[],
+  /**
+   * Linha em inglês no cartão de português: quem vai se inscrever ainda não lê
+   * português. Vazio = a linha some.
+   */
+  notaEstrangeiros: 'New in Brazil? You can fill in this form in English.',
+  /**
+   * Vagas solidárias nos cursos pagos: gratuitas ou com desconto, para quem
+   * não pode pagar. Decisão da administração (set/2026): NÃO há proporção fixa
+   * nem número publicado — a cada turma a administração decide quantas cabem
+   * depois de pagar o professor. Critério é a necessidade, por declaração da
+   * própria pessoa, sem pedir comprovante; quem ganha a vaga não é exposto à
+   * turma. `false` tira do formulário a caixa e a frase.
+   */
+  vagasSolidarias: true,
+};
+
+/**
  * Documentos e modelos disponibilizados à comunidade.
  *
  * Coloque os arquivos em `public/docs/` e aponte `file` para

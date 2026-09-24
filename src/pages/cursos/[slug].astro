@@ -1,0 +1,34 @@
+---
+/**
+ * Um curso só: /cursos/portugues, /cursos/culinaria... É o link de divulgação
+ * de um curso — o título e a descrição da página são os do curso, e é isso
+ * que a prévia do WhatsApp mostra.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Cursos from '../../components/Cursos.astro';
+import { site, cursos, type Categoria } from '../../config';
+
+export function getStaticPaths() {
+  return cursos.categorias.map((categoria) => ({
+    params: { slug: categoria.slug },
+    props: { categoria },
+  }));
+}
+
+const { categoria } = Astro.props as { categoria: Categoria };
+---
+
+<BaseLayout
+  title={`${categoria.nome} — ${site.name}`}
+  description={`${categoria.descricao} Inscreva-se pelo site.`}
+>
+  <Header />
+
+  <main id="conteudo">
+    <Cursos somente={categoria.id} pagina />
+  </main>
+
+  <Footer />
+</BaseLayout>

@@ -1,0 +1,627 @@
+---
+import Icon from './Icon.astro';
+import { cursos, type CursoCategoria } from '../config';
+
+interface Props {
+  /** Só esta categoria — é a página /cursos/<slug>, o link de um curso só. */
+  somente?: CursoCategoria;
+  /** Página própria: o título vira o <h1>. Na home ele é um <h2>. */
+  pagina?: boolean;
+}
+
+const { somente, pagina = false } = Astro.props;
+const Titulo = pagina ? 'h1' : 'h2';
+
+// Inscrição em cursos e oficinas. Formulário próprio, separado do de pedidos:
+// é outra pessoa que responde, e na Netlify cada um tem a sua caixa.
+//
+// A escolha é um grupo só de radios (`name="turma"`), com as turmas abertas de
+// cada tipo e, no fim de cada tipo, um "avise-me quando abrir". Enquanto
+// `cursos.turmas` estiver vazia só existem os "avise-me" — o formulário vira
+// uma lista de interesse, sem precisar de outro layout.
+//
+// Os campos condicionais (os do curso de português, o aviso de curso pago)
+// aparecem com `:has()`, só CSS. Os radios ficam dentro dos cartões, então não
+// dá para usar `:checked ~` como em Formulario.astro. Navegador sem `:has()`
+// só não mostra esses campos — todos opcionais, o envio funciona igual.
+//
+// Mesmas regras da Netlify do outro formulário: `form-name` igual ao `name`,
+// honeypot, e nenhum campo condicional `required`.
+const { formName, successPage, categorias, turmas, notaEstrangeiros, vagasSolidarias } = cursos;
+
+const grupos = categorias
+  .filter((c) => !somente || c.id === somente)
+  .map((c) => ({
+    ...c,
+    turmas: turmas.filter((t) => t.categoria === c.id && t.aberta),
+  }));
+const algumaAberta = grupos.some((g) => g.turmas.length > 0);
+
+// Num curso só e sem turma aberta, o único radio é o "avise-me": já vem
+// marcado, e com ele aparecem os campos do curso (os de português, o aviso de
+// curso pago) sem a pessoa precisar clicar em nada.
+const unico = grupos.length === 1 ? grupos[0] : null;
+const avisoMarcado = unico !== null && unico.turmas.length === 0;
+---
+
+<section id="cursos" class="section cursos">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Cursos e oficinas</span>
+      <Titulo>{unico ? unico.nome : 'Aprender junto, na mesquita'}</Titulo>
+      <p>
+        {unico && `${unico.descricao} `}
+        {
+          unico
+            ? algumaAberta
+              ? 'Escolha a turma e deixe seu contato — a gente confirma a vaga.'
+              : 'Ainda não há turma aberta: deixe seu nome e a gente avisa quando abrir.'
+            : algumaAberta
+            ? 'Estudos islâmicos, oficinas de culinária e português para quem chegou ao Brasil. Escolha a turma e deixe seu contato — a gente confirma a vaga.'
+            : 'O centro está organizando estudos islâmicos, oficinas de culinária e português para quem chegou ao Brasil. Ainda não há turma aberta: deixe seu nome e a gente avisa quando abrir.'
+        }{' '}
+        Tudo é aberto a todos — muçulmanos ou não.
+      </p>
+      {
+        unico && (
+          <p class="todos">
+            <a href="/cursos">Ver todos os cursos e oficinas</a>
+          </p>
+        )
+      }
+    </div>
+
+    <form
+      class="insc-grid"
+      name={formName}
+      method="POST"
+      action={successPage}
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+    >
+      <input type="hidden" name="form-name" value={formName} />
+
+      <p class="honeypot">
+        <label>Não preencha este campo: <input name="bot-field" tabindex="-1" /></label>
+      </p>
+
+      <fieldset class="insc-escolha">
+        <legend class="form-pergunta">Em que você quer se inscrever?</legend>
+
+        {
+          grupos.map((g) => (
+            <div class="cat">
+              <div class="cat-head">
+                <span class="cat-icon">
+                  <Icon name={g.icon} size={22} />
+                </span>
+                <div class="cat-texto">
+                  <h3>
+                    {g.nome}
+                    {g.valor && (
+                      <span class:list={['cat-valor', g.paga && 'cat-valor--paga']}>
+                        {g.valor}
+                      </span>
+                    )}
+                  </h3>
+                  <p>{g.descricao}</p>
+                  {g.id === 'idioma' && notaEstrangeiros && (
+                    <p class="cat-en" lang="en">
+                      {notaEstrangeiros}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* O <label> escondido antes de cada radio é para o e-mail da
+                  Netlify, que nomeia o campo pelo primeiro <label> que aponta
+                  para ele — sem isto o campo chegava com o texto do cartão. */}
+              <div class="opcoes">
+                {g.turmas.map((t) => (
+                  <>
+                    <label for={`turma-${t.id}`} class="visually-hidden">
+                      Inscrição
+                    </label>
+                    <label class="opcao">
+                      <input
+                        type="radio"
+                        name="turma"
+                        id={`turma-${t.id}`}
+                        value={`${g.nome} — ${t.titulo} (${t.quando})`}
+                        class:list={[`cat-${g.id}`, g.paga && 'cat-paga']}
+                        required
+                      />
+                      <span class="opcao-texto">
+                        <strong>{t.titulo}</strong>
+                        <small>
+                          {t.quando}
+                          {t.detalhe && ` · ${t.detalhe}`}
+                        </small>
+                      </span>
+                      {(t.valor ?? g.valor) && (
+                        <span class="opcao-valor">{t.valor ?? g.valor}</span>
+                      )}
+                    </label>
+                  </>
+                ))}
+
+                <label for={`aviso-${g.id}`} class="visually-hidden">
+                  Inscrição
+                </label>
+                <label class="opcao opcao--aviso">
+                  <input
+                    type="radio"
+                    name="turma"
+                    id={`aviso-${g.id}`}
+                    value={`${g.nome} — avisar quando abrir turma`}
+                    class:list={[`cat-${g.id}`, g.paga && 'cat-paga']}
+                    checked={avisoMarcado}
+                    required
+                  />
+                  <span class="opcao-texto">
+                    {g.turmas.length > 0 ? (
+                      <strong>Nenhum horário serve — avise-me da próxima turma</strong>
+                    ) : (
+                      <>
+                        <strong>Quero ser avisado quando abrir turma</strong>
+                        <small>Nenhuma turma aberta agora.</small>
+                      </>
+                    )}
+                  </span>
+                </label>
+              </div>
+            </div>
+          ))
+        }
+      </fieldset>
+
+      <div class="form">
+        <div class="campos">
+          <div class="campo">
+            <label for="i-nome">Nome completo</label>
+            <input type="text" id="i-nome" name="nome" required autocomplete="name" />
+          </div>
+
+          <div class="campo">
+            <label for="i-contato">WhatsApp, e-mail ou @ do Instagram</label>
+            <input
+              type="text"
+              id="i-contato"
+              name="contato"
+              required
+              placeholder="para a gente confirmar a vaga"
+            />
+          </div>
+
+          <!-- Só para português: ajuda a montar a turma pelo nível de quem vem. -->
+          <div class="so-idioma campo">
+            <label for="i-pais">País de origem <span lang="en">· Country</span></label>
+            <input type="text" id="i-pais" name="pais" maxlength="60" autocomplete="country-name" />
+          </div>
+
+          <div class="so-idioma campo">
+            <label for="i-lingua">Língua materna <span lang="en">· Native language</span></label>
+            <input type="text" id="i-lingua" name="lingua_materna" maxlength="60" />
+          </div>
+
+          <div class="so-idioma campo">
+            <label for="i-nivel">
+              Quanto português você já fala? <span lang="en">· Your Portuguese</span>
+            </label>
+            <select id="i-nivel" name="nivel_portugues">
+              <option value="">Selecione… / Select…</option>
+              <option value="Nada ainda">Nada ainda · None yet</option>
+              <option value="Um pouco">Um pouco · A little</option>
+              <option value="Consigo conversar">Consigo conversar · I can hold a conversation</option>
+            </select>
+          </div>
+
+          <!-- Só para curso pago. Nada se paga pelo site: o valor é combinado
+               com quem confirmar a vaga. -->
+          <div class="so-paga campo">
+            <p class="aviso-pago">
+              <Icon name="info" size={17} />
+              <span>
+                Curso pago: o valor e a forma de pagamento são combinados quando a vaga for
+                confirmada. Nada é cobrado por este site.
+              </span>
+            </p>
+          </div>
+
+          {/* Vaga solidária: marcar é opcional, e o que se marca aqui só chega
+              à administração. Sem pedir motivo nem comprovante — a conversa,
+              se precisar, é em particular. */}
+          {
+            vagasSolidarias && (
+              <div class="so-paga campo">
+                <label class="solidaria" for="i-solidaria">
+                  <input
+                    type="checkbox"
+                    id="i-solidaria"
+                    name="vaga_solidaria"
+                    value="Precisa de apoio para pagar"
+                  />
+                  <span>
+                    <strong>Não consigo pagar o valor todo</strong>
+                    <small>
+                      Temos vagas solidárias, gratuitas ou com desconto. Só a administração
+                      vê esta resposta. <span lang="en">Can't afford it? Tick here.</span>
+                    </small>
+                  </span>
+                </label>
+              </div>
+            )
+          }
+
+          <div class="campo">
+            <label for="i-mensagem">
+              Alguma dúvida ou observação? <span class="opcional">(opcional)</span>
+            </label>
+            <textarea
+              id="i-mensagem"
+              name="mensagem"
+              rows="3"
+              placeholder="melhor dia ou horário para você, por exemplo"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary form-enviar">
+          <Icon name="send" size={18} />
+          {algumaAberta ? 'Enviar inscrição' : 'Quero ser avisado'}
+        </button>
+
+        <p class="form-rodape">
+          Usamos seu contato só para falar sobre o curso. Não publicamos nem repassamos
+          seus dados.
+        </p>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+  // Mesmo enxugamento do formulário de pedidos: o que o CSS escondeu não vai
+  // no envio, senão o e-mail chega com "País de origem:" em branco numa
+  // inscrição de culinária. Pelo `name`, porque a Netlify apaga o
+  // `data-netlify` do HTML publicado.
+  document.querySelectorAll<HTMLFormElement>('form[name="inscricoes"]').forEach((form) => {
+    form.addEventListener('submit', () => {
+      form.querySelectorAll<HTMLElement>('.campo').forEach((bloco) => {
+        if (getComputedStyle(bloco).display !== 'none') return;
+        bloco.querySelectorAll<HTMLInputElement>('input, select, textarea').forEach((c) => {
+          c.disabled = true;
+        });
+      });
+    });
+  });
+</script>
+
+<style>
+  /* Entre Atividades (areia-escura) e Pedidos (branco). */
+  .cursos {
+    background: var(--areia);
+  }
+
+  .todos {
+    margin-top: 0.75rem;
+    font-size: 0.9375rem;
+  }
+
+  .insc-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* ---------- Escolha do curso ---------- */
+  .insc-escolha {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .form-pergunta {
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    padding: 0;
+  }
+
+  .cat {
+    background: var(--branco);
+    border: 1px solid var(--borda);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+  }
+
+  .cat-head {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+  }
+
+  .cat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: rgba(4, 69, 4, 0.08);
+    color: var(--verde);
+  }
+
+  .cat-texto h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.0625rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .cat-texto p {
+    font-size: 0.9rem;
+    color: var(--texto-suave);
+  }
+
+  .cat-en {
+    margin-top: 0.3rem;
+    font-style: italic;
+  }
+
+  .cat-valor {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(4, 69, 4, 0.08);
+    color: var(--verde);
+  }
+
+  /* Pago em dourado — `--dourado-escuro`, o único que passa AA em fundo claro. */
+  .cat-valor--paga {
+    background: rgba(198, 157, 19, 0.12);
+    color: var(--dourado-escuro);
+  }
+
+  .opcoes {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .opcao {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius);
+    background: var(--branco);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .opcao:hover {
+    border-color: var(--verde-claro);
+  }
+
+  .opcao:has(input:checked) {
+    border-color: var(--verde);
+    background: #f2f7f2;
+    box-shadow: inset 0 0 0 1px var(--verde);
+  }
+
+  .opcao input {
+    accent-color: var(--verde);
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  .opcao-texto {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+
+  .opcao-texto strong {
+    font-size: 0.9rem;
+  }
+
+  .opcao-texto small {
+    font-size: 0.8rem;
+    color: var(--texto-suave);
+  }
+
+  .opcao-valor {
+    margin-left: auto;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--dourado-escuro);
+    white-space: nowrap;
+  }
+
+  .opcao--aviso {
+    border-style: dashed;
+  }
+
+  /* ---------- Campos ---------- */
+  /* Colado no topo enquanto se rola a lista de cursos, que é mais comprida. */
+  .form {
+    position: sticky;
+    top: calc(var(--altura-topo) + 1rem);
+    padding: 1.75rem;
+    border-radius: var(--radius-lg);
+    background: var(--branco);
+    border: 1px solid var(--borda);
+  }
+
+  /* Uma coluna só: o formulário já é a coluna estreita da grade, e os
+     rótulos bilíngues quebram linha e desalinhavam campos lado a lado. */
+  .campos {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  /* Condicionais. Depois de `.campo`, e com duas classes, pela mesma razão
+     de Formulario.astro: `.campo` também define `display`. */
+  .campos .so-idioma,
+  .campos .so-paga {
+    display: none;
+  }
+
+  .insc-grid:has(.cat-idioma:checked) .so-idioma,
+  .insc-grid:has(.cat-paga:checked) .so-paga {
+    display: flex;
+  }
+
+  .campo label {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .campo label span[lang] {
+    font-weight: 400;
+    color: var(--texto-suave);
+  }
+
+  .campo input,
+  .campo select,
+  .campo textarea {
+    font-family: inherit;
+    font-size: 0.9375rem;
+    color: var(--texto);
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    background: var(--branco);
+    width: 100%;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .campo textarea {
+    resize: vertical;
+    min-height: 5rem;
+  }
+
+  .campo input:focus,
+  .campo select:focus,
+  .campo textarea:focus {
+    outline: none;
+    border-color: var(--verde);
+    box-shadow: 0 0 0 3px rgba(4, 69, 4, 0.1);
+  }
+
+  .campo input::placeholder,
+  .campo textarea::placeholder {
+    color: #93a091;
+  }
+
+  .opcional {
+    font-weight: 400;
+    color: var(--texto-suave);
+  }
+
+  .aviso-pago {
+    display: flex;
+    gap: 0.55rem;
+    align-items: flex-start;
+    padding: 0.8rem 0.95rem;
+    border-radius: var(--radius);
+    background: rgba(198, 157, 19, 0.1);
+    border: 1px solid rgba(198, 157, 19, 0.35);
+    font-size: 0.875rem;
+    color: var(--texto);
+  }
+
+  .aviso-pago :global(svg) {
+    color: var(--dourado-escuro);
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  .solidaria {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 0.8rem 0.95rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .solidaria:has(input:checked) {
+    border-color: var(--verde);
+    background: #f2f7f2;
+  }
+
+  .solidaria input {
+    accent-color: var(--verde);
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+  }
+
+  .solidaria span {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.35;
+  }
+
+  .solidaria small {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--texto-suave);
+  }
+
+  .form-enviar {
+    margin-top: 1.5rem;
+    cursor: pointer;
+  }
+
+  .form-rodape {
+    margin-top: 0.9rem;
+    font-size: 0.8125rem;
+    color: var(--texto-suave);
+  }
+
+  @media (max-width: 980px) {
+    .insc-grid {
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
+    }
+
+    .form {
+      position: static;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .form,
+    .cat {
+      padding: 1.1rem;
+    }
+  }
+</style>
