@@ -334,8 +334,13 @@ export type Categoria = {
   icon: string;
   /** Rótulo curto do valor; null = ainda não decidido (não mostra nada). */
   valor: string | null;
-  /** Paga: o formulário avisa que o valor é combinado depois, fora do site. */
+  /** Paga: o formulário avisa que nada é cobrado pelo site. */
   paga: boolean;
+  /**
+   * Curso pago: valor por extenso e o que ele inclui, mostrado no formulário
+   * quando o curso é escolhido. Tem de bater com o cartaz impresso.
+   */
+  condicoes?: string;
 };
 
 export const cursos = {
@@ -371,8 +376,13 @@ export const cursos = {
       descricao:
         'O português do dia a dia e o jeito de resolver a vida no Brasil, para quem chegou agora — de qualquer país e religião.',
       icon: 'languages',
-      valor: 'Pago',
+      // Decidido em set/2026 para a turma piloto: R$ 70/mês com material, a
+      // primeira aula grátis, sem desconto de família (quem não pode pagar tem
+      // a vaga solidária). "Da primeira turma" deixa rever o valor depois.
+      valor: 'R$ 70/mês',
       paga: true,
+      condicoes:
+        'R$ 70 por mês, material incluído — valor da primeira turma. A primeira aula é grátis, para experimentar sem compromisso.',
     },
   ] as Categoria[],
   turmas: [] as Turma[],

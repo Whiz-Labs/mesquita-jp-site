@@ -216,17 +216,24 @@ const avisoMarcado = unico !== null && unico.turmas.length === 0;
             </select>
           </div>
 
-          <!-- Só para curso pago. Nada se paga pelo site: o valor é combinado
-               com quem confirmar a vaga. -->
-          <div class="so-paga campo">
-            <p class="aviso-pago">
-              <Icon name="info" size={17} />
-              <span>
-                Curso pago: o valor e a forma de pagamento são combinados quando a vaga for
-                confirmada. Nada é cobrado por este site.
-              </span>
-            </p>
-          </div>
+          {/* Só para curso pago, um aviso por curso: as condições de cada um.
+              Nada se paga pelo site — o pagamento é combinado com quem
+              confirmar a vaga. */}
+          {
+            grupos
+              .filter((g) => g.paga)
+              .map((g) => (
+                <div class:list={['so-paga', `so-cat-${g.id}`, 'campo']}>
+                  <p class="aviso-pago">
+                    <Icon name="info" size={17} />
+                    <span>
+                      {g.condicoes && <strong>{g.condicoes}</strong>} O pagamento é combinado
+                      quando a vaga for confirmada; nada é cobrado por este site.
+                    </span>
+                  </p>
+                </div>
+              ))
+          }
 
           {/* Vaga solidária: marcar é opcional, e o que se marca aqui só chega
               à administração. Sem pedir motivo nem comprovante — a conversa,
@@ -496,6 +503,20 @@ const avisoMarcado = unico !== null && unico.turmas.length === 0;
     display: flex;
   }
 
+  /* As condições de valor são de um curso só: com outro curso pago escolhido,
+     elas não aparecem. Uma regra por categoria (são três, fixas). */
+  .campos .so-cat-religioso,
+  .campos .so-cat-culinaria,
+  .campos .so-cat-idioma {
+    display: none;
+  }
+
+  .insc-grid:has(.cat-religioso:checked) .so-cat-religioso,
+  .insc-grid:has(.cat-culinaria:checked) .so-cat-culinaria,
+  .insc-grid:has(.cat-idioma:checked) .so-cat-idioma {
+    display: flex;
+  }
+
   .campo label {
     font-size: 0.875rem;
     font-weight: 600;
@@ -553,6 +574,10 @@ const avisoMarcado = unico !== null && unico.turmas.length === 0;
     border: 1px solid rgba(198, 157, 19, 0.35);
     font-size: 0.875rem;
     color: var(--texto);
+  }
+
+  .aviso-pago strong {
+    font-weight: 700;
   }
 
   .aviso-pago :global(svg) {
